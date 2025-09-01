@@ -1,9 +1,34 @@
-# About
-This is the demo site for [Fuwari](https://github.com/saicaca/fuwari).
+# Sobre Mi
 
-::github{repo="saicaca/fuwari"}
+¡Hola! Soy Alejandro, un **entusiasta de la ciberseguridad**. Estoy empezando mi camino en seguridad informática y me apasiona aprender sobre **protección de sistemas, pentesting y hacer desafíos estilo CTFs**.
 
-> ### Sources of images used in this site
-> - [Unsplash](https://unsplash.com/)
-> - [星と少女](https://www.pixiv.net/artworks/108916539) by [Stella](https://www.pixiv.net/users/93273965)
-> - [Rabbit - v1.4 Showcase](https://civitai.com/posts/586908) by [Rabbit_YourMajesty](https://civitai.com/user/Rabbit_YourMajesty)
+***
+
+### 👨‍💻 Sobre mí
+
+* 📍 **Ubicación** Cantabria/España
+* 🎓 **Formación** ASIR (_En un futuro_)
+* 🌱 **Actualmente aprendiendo** Pentesting básico, redes, Linux y scripting en Python
+* ⚡ **Intereses** Ciberseguridad, hacking ético, BugBounty y CTFs
+
+***
+
+### 📚 Aprendizaje y Motivación
+
+* Me dedico a **estudiar ciberseguridad de manera autodidacta**, siguiendo writeups, tutoriales y laboratorios.
+* Estoy **explorando técnicas de hacking ético** a través de plataformas como TryHackMe y Hack The Box.
+* Mi objetivo es **ganar experiencia práctica** y eventualmente colaborar en proyectos de seguridad reales.
+
+***
+
+### 📫 Contáctame
+
+Estoy abierto a **aprender, recibir consejos y participar en iniciativas de seguridad**. Puedes contactarme por:
+
+* ✉️ **Email** alexbolatrue@gmail.com
+* 🔵 **Discord** @zelpro
+* 🌐 **GitHub** github.com/zelpro-dev
+
+***
+
+> _“The quieter you become, the more you are able to hear.”
