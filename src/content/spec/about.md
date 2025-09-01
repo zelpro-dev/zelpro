@@ -31,4 +31,4 @@ Estoy abierto a **aprender, recibir consejos y participar en iniciativas de segu
 
 ***
 
-> _“The quieter you become, the more you are able to hear.”
+> _“The quieter you become, the more you are able to hear.”_
