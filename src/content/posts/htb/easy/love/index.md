@@ -10,15 +10,15 @@ category: HackTheBox
 
 ### Técnicas vistas
 
-> Server Side Request Forgery (SSRF)
-> Exploiting Voting System
-> Abusing AlwaysInstallElevated (msiexec/msi file)
+- Server Side Request Forgery (SSRF)
+- Exploiting Voting System
+- Abusing AlwaysInstallElevated (msiexec/msi file)
 
 ### Preparación
 
-> eJPT
-> eWPT
-> OSCP (Escalada)
+- eJPT
+- eWPT
+- OSCP (Escalada)
 
 ***
 

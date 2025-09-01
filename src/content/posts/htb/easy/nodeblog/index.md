@@ -10,15 +10,15 @@ category: HackTheBox
 
 ### Técnicas vistas
 
-> NoSQL Injection (Authentication Bypass)
-> XXE File Read
-> NodeJS Deserialization Attack (IIFE Abusing)
-> Mongo Database Enumeration
+- NoSQL Injection (Authentication Bypass)
+- XXE File Read
+- NodeJS Deserialization Attack (IIFE Abusing)
+- Mongo Database Enumeration
 
 ### Preparación
 
-> eJPT  
-> eWPT
+- eJPT  
+- eWPT
 
 ***
 

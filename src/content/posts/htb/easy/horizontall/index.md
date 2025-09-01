@@ -10,15 +10,15 @@ category: HackTheBox
 
 ### Técnicas vistas
 
-> Information Leakage
-> Port Forwarding
-> Strapi CMS Exploitation
-> Laravel Exploitation
+- Information Leakage
+- Port Forwarding
+- Strapi CMS Exploitation
+- Laravel Exploitation
 
 ### Preparación
 
-> eWPT
-> eJPT
+- eWPT
+- eJPT
 
 ***
 

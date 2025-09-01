@@ -10,13 +10,13 @@ category: HackTheBox
 
 ### Técnicas vistas
 
-> NodeJS SSTI (Server Side Template Injection)
-> AppArmor Profile Bypass (Privilege Escalation)
+- NodeJS SSTI (Server Side Template Injection)
+- AppArmor Profile Bypass (Privilege Escalation)
 
 ### Preparación
 
-> eJPT  
-> eWPT
+- eJPT  
+- eWPT
 
 ***
 

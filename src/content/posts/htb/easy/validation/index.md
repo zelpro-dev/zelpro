@@ -10,14 +10,14 @@ category: HackTheBox
 
 ### Técnicas vistas
 
-> SQLI (Error Based)  
-> SQLI -> RCE (INTO OUTFILE)  
-> Information Leakage
+- SQLI (Error Based)  
+- SQLI -> RCE (INTO OUTFILE)  
+- Information Leakage
 
 ### Preparación
 
-> eJPT  
-> eWPT
+- eJPT  
+- eWPT
 
 ***
 
