@@ -312,7 +312,7 @@ if login_request.status_code == 200:
 			print("Exploit completed")
 ```
 
-Si seguimos los pasos para usar el exploit, por lo menos a mi a día de hoy no funciona, si también es tu paso, sigue antento. Si vemos que es exactamente lo que hace el exploit, es loguearse e inyectar comandos en la ruta `/status_rrd_graph_img.php`. 
+Si seguimos los pasos para usar el exploit, por lo menos a mi a día de hoy no funciona, si también es tu caso, sigue antento. Si vemos que es exactamente lo que hace el exploit, es loguearse e inyectar comandos en la ruta `/status_rrd_graph_img.php`. 
 Usando **Burpsuite** vamos a interceptar la solicitud a esa ruta y mandarla al repeater para jugar con ella:
 
 ![Burpsuite Intercept](./1.png)
