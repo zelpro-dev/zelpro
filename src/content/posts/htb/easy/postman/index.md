@@ -134,7 +134,7 @@ Allí podemos ver una serie de pasos que seguiremos para conectarnos a la máqui
 
 <figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2F1qdNcH7DHoqHnLwjwfds%2Fimage.png?alt=media&#x26;token=04adf660-cb38-4026-9503-648dcc6dd7a5" alt=""><figcaption></figcaption></figure>
 
-```
+```bash
 redis@Postman:~$ whoami
 redis
 ```
