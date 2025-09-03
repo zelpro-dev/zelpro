@@ -81,7 +81,7 @@ nmap -sVC -p22,80,6379,10000 10.10.10.160 -oN nmap/targeted
 | `10.10.10.160`      | Dirección IP objetivo.                                                               |
 | `-oN nmap/targeted` | Guarda la salida en **formato normal** en el archivo indicado.                       |
 
-```wrap=false
+```txt wrap=false
 PORT      STATE SERVICE VERSION
 22/tcp    open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
 | ssh-hostkey: 
@@ -101,7 +101,7 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
 Usamos el comando **whatweb** para ver más información:
 
-```wrap=false
+```bash wrap=false
 ❯ whatweb http://10.10.10.160
 http://10.10.10.160 [200 OK] Apache[2.4.29], Bootstrap, Country[RESERVED][ZZ], HTML5, HTTPServer[Ubuntu Linux][Apache/2.4.29 (Ubuntu)], IP[10.10.10.160], JQuery, Script, Title[The Cyber Geek's Personal Website], X-UA-Compatible[IE=edge]
 ```
@@ -143,7 +143,7 @@ redis
 
 Además del usuario **Matt**, no encontramos nada más interesante dentro de la máquina excepto un **id\_rsa** protegido por contraseña dentro de la ruta **/opt**:
 
-```wrap=false
+```txt wrap=false
 -----BEGIN RSA PRIVATE KEY-----
 Proc-Type: 4,ENCRYPTED
 DEK-Info: DES-EDE3-CBC,73E9CEFBCCF5287C
@@ -178,7 +178,7 @@ X+hK5HPpp6QnjZ8A5ERuUEGaZBEUvGJtPGHjZyLpkytMhTjaOrRNYw==
 
 Para crackearlo utilizaremos la herramienta **ssh2john** para convertirlo en un **hash** crackeable por dicha herramienta:
 
-```wrap=false
+```txt wrap=false
 id_rsa:$sshng$0$8$73E9CEFBCCF5287C$1192$25e840e75235eebb0238e56ac96c7e0bcdfadc8381617435d43770fe9af72f6036343b41eedbec5cdcaa2838217d09d77301892540fd90a267889909cebbc5d567a9bc
 c3648fd648b5743360df306e396b92ed5b26ae719c95fd1146f923b936ec6b13c2c32f2b35e491f11941a5cafd3e74b3723809d71f6ebd5d5c8c9a6d72cba593a26442afaf8f8ac928e9e28bba71d9c25a1ce403f4f026
 95c6d5678e98cbed0995b51c206eb58b0d3fa0437fbf1b4069a6962aea4665df2c1f762614fdd6ef09cc7089d7364c1b9bda52dbe89f4aa03f1ef178850ee8b0054e8ceb37d306584a81109e73315aebb774c656472f13
@@ -224,7 +224,7 @@ Sabiendo que tenemos estas credenciales, podríamos probarlas en el **Webmin**:
 
 Sabiendo que la versión es la **1.910** podemos buscar algun exploit:
 
-```wrap=false
+```bash wrap=false
 ❯ searchsploit Webmin 1.910
 ----------------------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------
  Exploit Title                                                                                                                                       |  Path
