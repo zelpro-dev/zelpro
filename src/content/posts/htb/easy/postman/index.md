@@ -45,7 +45,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.160 -oG nmap/allPorts
 | `10.10.10.160`      | Dirección IP objetivo.                                                                       |
 | `-oG nmap/allPorts` | Guarda la salida en formato **grepable** para procesar con herramientas como `grep` o `awk`. |
 
-```
+```txt
 PORT      STATE SERVICE          REASON
 22/tcp    open  ssh              syn-ack ttl 63
 80/tcp    open  http             syn-ack ttl 63
@@ -122,7 +122,7 @@ En el puerto **10000** hay un servicio llamado **Webmin**:
 
 En este puerto encontramos el servicio **Redis** en el cual nos podemos conectar con el siguiente comando:
 
-```
+```bash
 redis-cli -h 10.10.10.160
 ```
 
@@ -197,7 +197,7 @@ ffeaecc1ab3b7705db99353c458dc9932a638598b195e25a14051e414e20dc1510eb476a467f4e86
 
 Y con el diccionario **rockyou.txt**, obtendremos la contraseña:
 
-```
+```bash
 ❯ john --wordlist=/usr/share/wordlists/rockyou.txt hash
 Using default input encoding: UTF-8
 Loaded 1 password hash (SSH, SSH private key [RSA/DSA/EC/OPENSSH 32/64])
@@ -213,7 +213,7 @@ Session completed.
 
 Si hacemos `su Matt` y ponemos esa contraseña funciona. Por lo que ahora toca escalar a **root:**
 
-```
+```bash
 Matt@Postman:~$ cat user.txt 
 3cd169f4288a4e3...
 ```
@@ -284,7 +284,7 @@ if __name__ == "__main__":
     makeRequest()
 ```
 
-```
+```bash
 root@Postman:/usr/share/webmin/package-updates/# whoami
 root
 root@Postman:~# cat root.txt 
