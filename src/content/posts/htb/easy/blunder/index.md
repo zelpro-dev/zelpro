@@ -1,8 +1,8 @@
 ---
-title: Blunder
+title: Blunder | Linux
 published: 2025-08-09
 image: "./logo.png"
-tags: [Easy, Bludit CMS, Bypassing IP Blocking, Directory Traversal, Playing with .htaccess, Image File Upload, CVE-2019-14287, eWPT, OSWE, eWPTXv2]
+tags: [Easy, Linux, Bludit CMS, Bypassing IP Blocking, Directory Traversal, Playing with .htaccess, Image File Upload, CVE-2019-14287, eWPT, OSWE, eWPTXv2]
 category: HackTheBox
 ---
 

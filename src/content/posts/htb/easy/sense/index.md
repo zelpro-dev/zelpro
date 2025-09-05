@@ -1,8 +1,8 @@
 ---
-title: Sense
+title: Sense | Linux
 published: 2025-09-02
 image: "./logo.png"
-tags: [Easy, Information Leakage, PFsense, Abusing RRD Graphs, RCE, Evasion Techniques, eWPT, eWPTXv2, OSWE]
+tags: [Easy, Linux, Information Leakage, PFsense, Abusing RRD Graphs, RCE, Evasion Techniques, eWPT, eWPTXv2, OSWE]
 category: HackTheBox
 ---
 

@@ -1,8 +1,8 @@
 ---
-title: Haystack
+title: Haystack | Linux
 published: 2025-06-10
 image: "./logo.png"
-tags: [Easy, ElasticSearch, Information Leakage, Kibana, CVE-2018-17246, Abusing Logstash, eWPT, OSCP, OSWE]
+tags: [Easy, Linux, ElasticSearch, Information Leakage, Kibana, CVE-2018-17246, Abusing Logstash, eWPT, OSCP, OSWE]
 category: HackTheBox
 ---
 
@@ -36,7 +36,7 @@ scan () {
 
 Esto nos exportará los puertos que estén abiertos para que posteriormente ver las versiones que corren en cada puerto.
 
-```
+```txt wrap=false
 # Nmap 7.95 scan initiated Sat Jun  7 23:40:47 2025 as: /usr/lib/nmap/nmap -sS --min-rate=5000 -p- --open -vvv -n -Pn -oG nmap/AllPorts 10.10.10.115
 # Ports scanned: TCP(65535;1-65535) UDP(0;) SCTP(0;) PROTOCOLS(0;)
 Host: 10.10.10.115 ()   Status: Up
@@ -46,7 +46,7 @@ Host: 10.10.10.115 ()   Ports: 22/open/tcp//ssh///, 80/open/tcp//http///, 9200/o
 
 Una vez escaneados los puertos **88** y **2222** veremos lo siguiente:
 
-```
+```txt wrap=false
 # Nmap 7.95 scan initiated Mon Jun  9 09:40:37 2025 as: /usr/lib/nmap/nmap --privileged -p22,80,9200 -sVC -v -oN nmap/Targeted 10.10.10.115
 Nmap scan report for 10.10.10.115
 Host is up (0.10s latency).

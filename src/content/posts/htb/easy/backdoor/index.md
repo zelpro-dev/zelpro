@@ -1,5 +1,5 @@
 ---
-title: Backdoor
+title: Backdoor | Linux
 published: 2025-08-09
 image: "./logo.png"
 tags: [Easy, WordPress, LFI, LFI to RCE, Gdbserver, Abusing Screen, OSCP, eWPT, OSWE, eWPTXv2]

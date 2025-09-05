@@ -1,8 +1,8 @@
 ---
-title: Tabby
+title: Tabby | Linux
 published: 2025-08-09
 image: "./logo.png"
-tags: [Easy, LFI, Abusing Tomcat, LXC Exploitation, eWPT, OSCP, eJPT]
+tags: [Easy, Linux, LFI, Abusing Tomcat, LXC Exploitation, eWPT, OSCP, eJPT]
 category: HackTheBox
 ---
 
