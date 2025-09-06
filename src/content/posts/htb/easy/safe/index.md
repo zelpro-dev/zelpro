@@ -70,7 +70,7 @@ extractPorts () {
 ```
 
 ```bash wrap=false
-nmap -sVC -p22,80,1337 10.10.11.147 -oN nmap/targeted
+nmap -sVC -p22,80,1337 10.10.10.147 -oN nmap/targeted
 ```
 
 | Parámetro           | Descripción                                                                          |
@@ -78,7 +78,7 @@ nmap -sVC -p22,80,1337 10.10.11.147 -oN nmap/targeted
 | `-sV`               | Detecta la **versión** de los servicios que están corriendo en los puertos abiertos. |
 | `-C`                | Ejecuta **scripts NSE de detección de versiones y configuración**.                   |
 | `-p`                | Escanea únicamente los puertos seleccionados.                                        |
-| `10.10.11.147`      | Dirección IP objetivo.                                                               |
+| `10.10.10.147`      | Dirección IP objetivo.                                                               |
 | `-oN nmap/targeted` | Guarda la salida en **formato normal** en el archivo indicado.                       |
 
 ```txt wrap=false
