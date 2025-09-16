@@ -2,7 +2,7 @@
 title: Admirer | Linux
 published: 2025-08-15
 image: "./logo.png"
-tags: [Easy, Linux, Wordpress Enumeration, Information Leakage, Analyzing a jar file, Abusing Sudoers Privilege, eJPT]
+tags: [Easy, Linux, Information Leakage, Admirer explotation, Abusing Sudoers Privilege, eWPT, OSWE, OSCP]
 category: HackTheBox
 ---
 
