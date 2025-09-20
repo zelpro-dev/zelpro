@@ -1,8 +1,8 @@
 ---
-title: Netmon | Windows
+title: Delivery | Linux
 published: 2025-08-20
 image: "./logo.png"
-tags: [Easy, Windows, FTP Enum, Information Leakage, Abusing PRTG Network Monitor, RCE, eJPT, eWPT, OSCP]
+tags: [Easy, Linux, ]
 category: HackTheBox
 ---
 
@@ -10,15 +10,19 @@ category: HackTheBox
 
 ### Técnicas vistas
 
-- FTP Enumeration
+- Virtual Hosting Enumeration
+- Abusing Support Ticket System
+- Access to MatterMost
 - Information Leakage
-- Abusing PRTG Network Monitor - Command Injection [RCE]
+- Database Enumeration - MYSQL
+- Cracking Hashes
+- Playing with hashcat rules in order to create passwords
+- Playing with sucrack to find out a user's password
 
 ### Preparación
 
 - eJPT
 - eWPT
-- OSCP
 
 ***
 
@@ -29,7 +33,7 @@ category: HackTheBox
 Iniciaremos el escaneo de **Nmap** con la siguiente línea de comandos:
 
 ```bash wrap=false
-nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.152 -oG nmap/allPorts 
+nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.222 -oG nmap/allPorts 
 ```
 
 | Parámetro           | Descripción                                                                                  |
@@ -41,24 +45,14 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.10.10.152 -oG nmap/allPorts
 | `-vvv`              | Máxima **verbosidad**, muestra más detalles en tiempo real.                                  |
 | `-n`                | Evita resolución DNS.                                                                        |
 | `-Pn`               | Asume que el host está activo, **sin hacer ping** previo.                                    |
-| `10.10.10.152`       | Dirección IP objetivo.                                                                       |
+| `10.10.10.222`       | Dirección IP objetivo.                                                                       |
 | `-oG nmap/allPorts` | Guarda la salida en formato **grepable** para procesar con herramientas como `grep` o `awk`. |
 
 ```txt wrap=false
-PORT      STATE SERVICE      REASON
-21/tcp    open  ftp          syn-ack ttl 127
-80/tcp    open  http         syn-ack ttl 127
-135/tcp   open  msrpc        syn-ack ttl 127
-139/tcp   open  netbios-ssn  syn-ack ttl 127
-445/tcp   open  microsoft-ds syn-ack ttl 127
-5985/tcp  open  wsman        syn-ack ttl 127
-47001/tcp open  winrm        syn-ack ttl 127
-49664/tcp open  unknown      syn-ack ttl 127
-49665/tcp open  unknown      syn-ack ttl 127
-49666/tcp open  unknown      syn-ack ttl 127
-49667/tcp open  unknown      syn-ack ttl 127
-49668/tcp open  unknown      syn-ack ttl 127
-49669/tcp open  unknown      syn-ack ttl 127
+PORT     STATE SERVICE REASON
+22/tcp   open  ssh     syn-ack ttl 63
+80/tcp   open  http    syn-ack ttl 63
+8065/tcp open  unknown syn-ack ttl 63
 ```
 
 Ahora con la función **extractPorts**, extraeremos los puertos abiertos y nos los copiaremos al clipboard para hacer un escaneo más profundo:
@@ -78,7 +72,7 @@ extractPorts () {
 ```
 
 ```bash wrap=false
-nmap -sVC -p21,80,135,139,445,5985,47001,49664,49665,49666,49667,49668,49669 10.10.10.152 -oN nmap/targeted
+nmap -sVC -p22,80,8065 10.10.10.222 -oN nmap/targeted
 ```
 
 | Parámetro           | Descripción                                                                          |
@@ -86,56 +80,105 @@ nmap -sVC -p21,80,135,139,445,5985,47001,49664,49665,49666,49667,49668,49669 10.
 | `-sV`               | Detecta la **versión** de los servicios que están corriendo en los puertos abiertos. |
 | `-C`                | Ejecuta **scripts NSE de detección de versiones y configuración**.                   |
 | `-p`                | Escanea únicamente los puertos seleccionados.                                        |
-| `10.10.10.152`       | Dirección IP objetivo.                                                               |
+| `10.10.10.222`       | Dirección IP objetivo.                                                               |
 | `-oN nmap/targeted` | Guarda la salida en **formato normal** en el archivo indicado.                       |
 
 ```txt wrap=false
-PORT      STATE SERVICE      VERSION
-21/tcp    open  ftp          Microsoft ftpd
-| ftp-anon: Anonymous FTP login allowed (FTP code 230)
-| 02-03-19  12:18AM                 1024 .rnd
-| 02-25-19  10:15PM       <DIR>          inetpub
-| 07-16-16  09:18AM       <DIR>          PerfLogs
-| 02-25-19  10:56PM       <DIR>          Program Files
-| 02-03-19  12:28AM       <DIR>          Program Files (x86)
-| 02-03-19  08:08AM       <DIR>          Users
-|_11-10-23  10:20AM       <DIR>          Windows
-| ftp-syst: 
-|_  SYST: Windows_NT
-80/tcp    open  http         Indy httpd 18.1.37.13946 (Paessler PRTG bandwidth monitor)
-|_http-server-header: PRTG/18.1.37.13946
-|_http-trane-info: Problem with XML parsing of /evox/about
-| http-title: Welcome | PRTG Network Monitor (NETMON)
-|_Requested resource was /index.htm
-135/tcp   open  msrpc        Microsoft Windows RPC
-139/tcp   open  netbios-ssn  Microsoft Windows netbios-ssn
-445/tcp   open  microsoft-ds Microsoft Windows Server 2008 R2 - 2012 microsoft-ds
-5985/tcp  open  http         Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
-|_http-title: Not Found
-|_http-server-header: Microsoft-HTTPAPI/2.0
-47001/tcp open  http         Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
-|_http-title: Not Found
-|_http-server-header: Microsoft-HTTPAPI/2.0
-49664/tcp open  msrpc        Microsoft Windows RPC
-49665/tcp open  msrpc        Microsoft Windows RPC
-49666/tcp open  msrpc        Microsoft Windows RPC
-49667/tcp open  msrpc        Microsoft Windows RPC
-49668/tcp open  msrpc        Microsoft Windows RPC
-49669/tcp open  msrpc        Microsoft Windows RPC
-Service Info: OSs: Windows, Windows Server 2008 R2 - 2012; CPE: cpe:/o:microsoft:windows
-
-Host script results:
-| smb2-security-mode: 
-|   3:1:1: 
-|_    Message signing enabled but not required
-| smb-security-mode: 
-|   account_used: guest
-|   authentication_level: user
-|   challenge_response: supported
-|_  message_signing: disabled (dangerous, but default)
-| smb2-time: 
-|   date: 2025-09-19T21:23:34
-|_  start_date: 2025-09-19T21:02:39
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 9c:40:fa:85:9b:01:ac:ac:0e:bc:0c:19:51:8a:ee:27 (RSA)
+|   256 5a:0c:c0:3b:9b:76:55:2e:6e:c4:f4:b9:5d:76:17:09 (ECDSA)
+|_  256 b7:9d:f7:48:9d:a2:f2:76:30:fd:42:d3:35:3a:80:8c (ED25519)
+80/tcp   open  http    nginx 1.14.2
+|_http-server-header: nginx/1.14.2
+|_http-title: Welcome
+8065/tcp open  http    Golang net/http server
+|_http-title: Mattermost
+| http-robots.txt: 1 disallowed entry 
+|_/
+| fingerprint-strings: 
+|   FourOhFourRequest: 
+|     HTTP/1.0 200 OK
+|     Accept-Ranges: bytes
+|     Cache-Control: no-cache, max-age=31556926, public
+|     Content-Length: 3108
+|     Content-Security-Policy: frame-ancestors 'self'; script-src 'self' cdn.rudderlabs.com
+|     Content-Type: text/html; charset=utf-8
+|     Last-Modified: Sat, 20 Sep 2025 09:58:13 GMT
+|     X-Frame-Options: SAMEORIGIN
+|     X-Request-Id: ihyhjhz9ni8puj43k334efo8uh
+|     X-Version-Id: 5.30.0.5.30.1.57fb31b889bf81d99d8af8176d4bbaaa.false
+|     Date: Sat, 20 Sep 2025 10:04:04 GMT
+|     <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0"><meta name="robots" content="noindex, nofollow"><meta name="referrer" content="no-referrer"><title>Mattermost</title><meta name="mobile-web-app-capable" content="yes"><meta name="application-name" content="Mattermost"><meta name="format-detection" content="telephone=no"><link re
+|   GenericLines, Help, RTSPRequest, SSLSessionReq: 
+|     HTTP/1.1 400 Bad Request
+|     Content-Type: text/plain; charset=utf-8
+|     Connection: close
+|     Request
+|   GetRequest: 
+|     HTTP/1.0 200 OK
+|     Accept-Ranges: bytes
+|     Cache-Control: no-cache, max-age=31556926, public
+|     Content-Length: 3108
+|     Content-Security-Policy: frame-ancestors 'self'; script-src 'self' cdn.rudderlabs.com
+|     Content-Type: text/html; charset=utf-8
+|     Last-Modified: Sat, 20 Sep 2025 09:58:13 GMT
+|     X-Frame-Options: SAMEORIGIN
+|     X-Request-Id: n33yaeq9xj8kzpcxbw51akrmkc
+|     X-Version-Id: 5.30.0.5.30.1.57fb31b889bf81d99d8af8176d4bbaaa.false
+|     Date: Sat, 20 Sep 2025 10:03:48 GMT
+|     <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0"><meta name="robots" content="noindex, nofollow"><meta name="referrer" content="no-referrer"><title>Mattermost</title><meta name="mobile-web-app-capable" content="yes"><meta name="application-name" content="Mattermost"><meta name="format-detection" content="telephone=no"><link re
+|   HTTPOptions: 
+|     HTTP/1.0 405 Method Not Allowed
+|     Date: Sat, 20 Sep 2025 10:03:48 GMT
+|_    Content-Length: 0
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port8065-TCP:V=7.95%I=7%D=9/20%Time=68CE7BF8%P=x86_64-pc-linux-gnu%r(Ge
+SF:nericLines,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x20t
+SF:ext/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x
+SF:20Request")%r(GetRequest,DF3,"HTTP/1\.0\x20200\x20OK\r\nAccept-Ranges:\
+SF:x20bytes\r\nCache-Control:\x20no-cache,\x20max-age=31556926,\x20public\
+SF:r\nContent-Length:\x203108\r\nContent-Security-Policy:\x20frame-ancesto
+SF:rs\x20'self';\x20script-src\x20'self'\x20cdn\.rudderlabs\.com\r\nConten
+SF:t-Type:\x20text/html;\x20charset=utf-8\r\nLast-Modified:\x20Sat,\x2020\
+SF:x20Sep\x202025\x2009:58:13\x20GMT\r\nX-Frame-Options:\x20SAMEORIGIN\r\n
+SF:X-Request-Id:\x20n33yaeq9xj8kzpcxbw51akrmkc\r\nX-Version-Id:\x205\.30\.
+SF:0\.5\.30\.1\.57fb31b889bf81d99d8af8176d4bbaaa\.false\r\nDate:\x20Sat,\x
+SF:2020\x20Sep\x202025\x2010:03:48\x20GMT\r\n\r\n<!doctype\x20html><html\x
+SF:20lang=\"en\"><head><meta\x20charset=\"utf-8\"><meta\x20name=\"viewport
+SF:\"\x20content=\"width=device-width,initial-scale=1,maximum-scale=1,user
+SF:-scalable=0\"><meta\x20name=\"robots\"\x20content=\"noindex,\x20nofollo
+SF:w\"><meta\x20name=\"referrer\"\x20content=\"no-referrer\"><title>Matter
+SF:most</title><meta\x20name=\"mobile-web-app-capable\"\x20content=\"yes\"
+SF:><meta\x20name=\"application-name\"\x20content=\"Mattermost\"><meta\x20
+SF:name=\"format-detection\"\x20content=\"telephone=no\"><link\x20re")%r(H
+SF:TTPOptions,5B,"HTTP/1\.0\x20405\x20Method\x20Not\x20Allowed\r\nDate:\x2
+SF:0Sat,\x2020\x20Sep\x202025\x2010:03:48\x20GMT\r\nContent-Length:\x200\r
+SF:\n\r\n")%r(RTSPRequest,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nConten
+SF:t-Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n
+SF:400\x20Bad\x20Request")%r(Help,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r
+SF:\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close
+SF:\r\n\r\n400\x20Bad\x20Request")%r(SSLSessionReq,67,"HTTP/1\.1\x20400\x2
+SF:0Bad\x20Request\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nCon
+SF:nection:\x20close\r\n\r\n400\x20Bad\x20Request")%r(FourOhFourRequest,DF
+SF:3,"HTTP/1\.0\x20200\x20OK\r\nAccept-Ranges:\x20bytes\r\nCache-Control:\
+SF:x20no-cache,\x20max-age=31556926,\x20public\r\nContent-Length:\x203108\
+SF:r\nContent-Security-Policy:\x20frame-ancestors\x20'self';\x20script-src
+SF:\x20'self'\x20cdn\.rudderlabs\.com\r\nContent-Type:\x20text/html;\x20ch
+SF:arset=utf-8\r\nLast-Modified:\x20Sat,\x2020\x20Sep\x202025\x2009:58:13\
+SF:x20GMT\r\nX-Frame-Options:\x20SAMEORIGIN\r\nX-Request-Id:\x20ihyhjhz9ni
+SF:8puj43k334efo8uh\r\nX-Version-Id:\x205\.30\.0\.5\.30\.1\.57fb31b889bf81
+SF:d99d8af8176d4bbaaa\.false\r\nDate:\x20Sat,\x2020\x20Sep\x202025\x2010:0
+SF:4:04\x20GMT\r\n\r\n<!doctype\x20html><html\x20lang=\"en\"><head><meta\x
+SF:20charset=\"utf-8\"><meta\x20name=\"viewport\"\x20content=\"width=devic
+SF:e-width,initial-scale=1,maximum-scale=1,user-scalable=0\"><meta\x20name
+SF:=\"robots\"\x20content=\"noindex,\x20nofollow\"><meta\x20name=\"referre
+SF:r\"\x20content=\"no-referrer\"><title>Mattermost</title><meta\x20name=\
+SF:"mobile-web-app-capable\"\x20content=\"yes\"><meta\x20name=\"applicatio
+SF:n-name\"\x20content=\"Mattermost\"><meta\x20name=\"format-detection\"\x
+SF:20content=\"telephone=no\"><link\x20re");
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
 ### Whatweb
