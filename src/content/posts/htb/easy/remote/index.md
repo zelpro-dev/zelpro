@@ -2,7 +2,7 @@
 title: Remote | Windows
 published: 2025-08-21
 image: "./logo.png"
-tags: [Easy, Windows, ]
+tags: [Easy, Windows, Web Enum, NFS Enum, Information Leakage, Abusing Umbraco, Umbraco CMS, TeamViewer password, eWPT, OSCP]
 category: HackTheBox
 ---
 
@@ -95,7 +95,6 @@ nmap -sVC -p21,80,111,135,139,445,2049,5985,47001,49664,49665,49666,49667,49678,
 | `-oN nmap/targeted` | Guarda la salida en **formato normal** en el archivo indicado.                       |
 
 ```txt wrap=false
-
 PORT      STATE SERVICE       VERSION
 21/tcp    open  ftp           Microsoft ftpd
 |_ftp-anon: Anonymous FTP login allowed (FTP code 230)
