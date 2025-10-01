@@ -222,6 +222,8 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 ## Explotación
 
+### Replacing views.py
+
 Si ponemos una `/` en el nombre se salta el resto de la ruta. Sabiendo que estamos en `/app/app/` podríamos sustituir el `views.py` por este:
 
 ```python wrap=false title='views.py (MODIFIED)'
@@ -276,6 +278,12 @@ root
 ```
 
 Vemos que estamos en un contenedor.
+
+### Flask Debug [Unintended way]
+
+Podemos ver que el modo **debug** de `Flask` está activado como nos muestra el repositorio. Anteriormente vimos la ruta `/console` mediante **fuzzing**:
+
+![Protected console](./1.png)
 
 
 
