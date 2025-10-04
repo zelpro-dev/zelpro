@@ -1,6 +1,6 @@
 ---
 title: Trick | Linux
-published: 2025-10-4
+published: 2025-10-04
 image: "./logo.png"
 tags: [Easy, Linux, ]
 category: HackTheBox
