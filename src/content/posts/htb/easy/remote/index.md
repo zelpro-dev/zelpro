@@ -1,6 +1,6 @@
 ---
 title: Remote | Windows
-published: 2025-08-25
+published: 2025-09-25
 image: "./logo.png"
 tags: [Easy, Windows, Web Enum, NFS Enum, Information Leakage, Abusing Umbraco, Umbraco CMS, TeamViewer password, eWPT, OSCP]
 category: HackTheBox

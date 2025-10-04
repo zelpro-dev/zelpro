@@ -1,8 +1,8 @@
 ---
 title: OpenSource | Linux
-published: 2025-08-27
+published: 2025-10-4
 image: "./logo.png"
-tags: [Easy, Linux, ]
+tags: [Easy, Linux, Web Enum, Github Enum, Information Leakage, RCE, LFI, Werkzeug Debugger, Port Forwarding, Pivoting, Abusing Gitea, Abusing Cron Job + Git Hooks, eWPT, e WPTXv2, OSWE, eCPPTv3, OSCP]
 category: HackTheBox
 ---
 

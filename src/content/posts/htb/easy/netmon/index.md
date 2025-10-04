@@ -1,6 +1,6 @@
 ---
 title: Netmon | Windows
-published: 2025-08-20
+published: 2025-09-20
 image: "./logo.png"
 tags: [Easy, Windows, FTP Enum, Information Leakage, Abusing PRTG Network Monitor, RCE, eJPT, eWPT, OSCP]
 category: HackTheBox
