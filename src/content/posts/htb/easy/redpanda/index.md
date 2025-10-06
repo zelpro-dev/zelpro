@@ -10,11 +10,11 @@ category: HackTheBox
 
 ### Técnicas vistas
 
--Server Side Template Injection (SSTI)
--SSTI - Bypassing special character restriction
--SSTI - Creation of a Python script to automate java injection (RCE)
--Creating a Bash script for process monitoring with user included
--Abusing log file + Image etadata + XML External Entity Injection (XXE) [Privilege Escalation]
+- Server Side Template Injection (SSTI)
+- SSTI - Bypassing special character restriction
+- SSTI - Creation of a Python script to automate java injection (RCE)
+- Creating a Bash script for process monitoring with user included
+- Abusing log file + Image etadata + XML External Entity Injection (XXE) [Privilege Escalation]
 
 ### Preparación
 
