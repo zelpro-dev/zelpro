@@ -1,6 +1,6 @@
 ---
 title: RedPanda | Linux
-published: 2025-10-05
+published: 2025-10-06
 image: "./logo.png"
 tags: [Easy, Linux, SSTI, RCE, XXE, eWPT, eWPTXv2, OSWE, OSCP]
 category: HackTheBox
