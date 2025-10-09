@@ -351,7 +351,7 @@ connect to [10.10.14.15] from (UNKNOWN) [10.10.11.191] 41424
  screenshot.xwd
 ```
 
-[Screenshot](./1.png)
+![Screenshot](./1.png)
 
 Tenemos la contraseña de `root:cah$mei7rai9A`:
 
